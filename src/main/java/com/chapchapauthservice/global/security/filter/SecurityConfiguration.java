@@ -1,8 +1,8 @@
 package com.chapchapauthservice.global.security.filter;
 
-import com.chapchapauthserivce.global.security.oauth2.DelegatingOAuth2UserService;
-import com.chapchapauthserivce.global.security.oauth2.OAuth2FailerHandler;
-import com.chapchapauthserivce.global.security.oauth2.OAuth2SuccessHandler;
+import com.chapchapauthservice.global.security.oauth2.DelegatingOAuth2UserService;
+import com.chapchapauthservice.global.security.oauth2.OAuth2FailerHandler;
+import com.chapchapauthservice.global.security.oauth2.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

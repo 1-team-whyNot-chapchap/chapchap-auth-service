@@ -4,8 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum RolePolicy {
-    NORMAL("NORMAL"),
-    SUPER("SUPER");
+    CUSTOMER("CUSTOMER"),
+    STORE_OWNER("STORE_OWNER"),
+    RIDER("RIDER"),
+    ADMIN("ADMIN"),
+    SUPER_ADMIN("SUPER_ADMIN")
+    ;
 
     private final String role;
 

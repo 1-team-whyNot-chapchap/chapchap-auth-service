@@ -1,6 +1,6 @@
 package com.chapchapauthservice.global.config.openapi;
 
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.Content;

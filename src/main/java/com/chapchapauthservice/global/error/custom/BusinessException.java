@@ -1,6 +1,6 @@
 package com.chapchapauthservice.global.error.custom;
 
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import lombok.Getter;
 
 @Getter

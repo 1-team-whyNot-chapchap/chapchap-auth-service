@@ -1,6 +1,7 @@
 package com.chapchapauthservice.global.cookie;
 
 import com.chapchapauthservice.global.jwt.JwtConfig;
+import com.chapchapauthservice.global.security.constant.SessionTypePolicy;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,12 +16,18 @@ import java.util.Optional;
 public class CookieManager {
     private final JwtConfig jwtConfig;
 
-    public void setRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
+    // 리프레시 토큰을 HttpOnly 쿠키에 저장한다.
+    // 세션 종류에 따라 일반 사용자/관리자 쿠키 유지 시간을 다르게 적용한다.
+    public void setRefreshTokenToCookie(
+            HttpServletResponse response,
+            String refreshToken,
+            SessionTypePolicy sessionType
+    ) {
         this.setCookie(
             response,
             jwtConfig.refreshTokenCookieName(),
             refreshToken,
-            jwtConfig.refreshTokenCookieExpiry(),
+            getRefreshTokenCookieExpiry(sessionType),
             jwtConfig.reissueUri()
         );
     }
@@ -40,6 +47,15 @@ public class CookieManager {
             request,
             jwtConfig.refreshTokenCookieName()).map(Cookie::getValue)
         ;
+    }
+
+    // 세션 종류에 맞는 리프레시 쿠키 유지 시간을 선택한다
+    // 쿠키 Max-Age 설정값은 초 단위다.
+    private int getRefreshTokenCookieExpiry(SessionTypePolicy sessionType){
+        return switch (sessionType) {
+            case USER -> jwtConfig.userRefreshTokenCookieExpiry();
+            case ADMIN -> jwtConfig.adminRefreshTokenCookieExpiry();
+        };
     }
 
     private Optional<Cookie> getCookie(HttpServletRequest request, String name) {

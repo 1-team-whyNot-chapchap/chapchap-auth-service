@@ -17,8 +17,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                    .info(
                      new Info()
-                         .title("Meerkatgram Auth API") // 문서 제목
-                         .description("Meerkatgram Auth REST API Document") // 문서의 설명
+                         .title("ChapChap Auth API") // 문서 제목
+                         .description("ChapChap Auth REST API Document") // 문서의 설명
                          .version("v1.0.0") // 문서 버전
                    ).components(new Components().addSecuritySchemes(BEARER_AUTH,
                 new SecurityScheme()

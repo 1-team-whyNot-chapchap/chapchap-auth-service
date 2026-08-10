@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.error.custom.business;
 
-import com.chapchapauthserivce.global.error.custom.BusinessException;
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.error.custom.BusinessException;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 
 public class InvalidTokenException extends BusinessException {
     public InvalidTokenException(String message) {

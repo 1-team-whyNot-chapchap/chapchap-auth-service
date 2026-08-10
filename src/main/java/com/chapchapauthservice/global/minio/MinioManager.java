@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.minio;
 
 
-import com.chapchapauthserivce.global.error.custom.business.FileManagedException;
+import com.chapchapauthservice.global.error.custom.business.FileManagedException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;

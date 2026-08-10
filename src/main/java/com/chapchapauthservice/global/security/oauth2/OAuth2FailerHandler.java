@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.security.oauth2;
 
-import com.chapchapauthserivce.global.config.SubServiceUriConfig;
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.config.SubServiceUriConfig;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

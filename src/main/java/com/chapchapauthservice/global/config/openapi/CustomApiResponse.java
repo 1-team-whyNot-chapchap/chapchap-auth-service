@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.config.openapi;
 
 
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.lang.annotation.ElementType;

@@ -93,7 +93,7 @@ logging:
     name: logs/error.log
   level:
     root: info
-    com.meerkatgramv2auth: debug
+    com.chapchapauthservice: debug
 
 
 # Security & JWT

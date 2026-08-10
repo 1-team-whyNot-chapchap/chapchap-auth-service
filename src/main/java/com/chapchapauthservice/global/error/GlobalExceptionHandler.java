@@ -1,8 +1,8 @@
 package com.chapchapauthservice.global.error;
 
-import com.chapchapauthserivce.global.error.custom.BusinessException;
-import com.chapchapauthserivce.global.response.GlobalResponse;
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.error.custom.BusinessException;
+import com.chapchapauthservice.global.response.GlobalResponse;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 미어켓그램의 커스텀 Exceptions 처리
+     * 커스텀 Exceptions 처리
      * @param e BusinessException
      */
     @ExceptionHandler(BusinessException.class)

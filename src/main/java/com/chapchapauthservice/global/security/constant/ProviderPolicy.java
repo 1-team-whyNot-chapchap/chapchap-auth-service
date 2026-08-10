@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum ProviderPolicy {
-    NONE("NONE"),
     KAKAO("KAKAO"),
     GOOGLE("GOOGLE");
 

@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.response;
 
 
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import org.springframework.http.ResponseEntity;
 
 public record GlobalResponse<T> (

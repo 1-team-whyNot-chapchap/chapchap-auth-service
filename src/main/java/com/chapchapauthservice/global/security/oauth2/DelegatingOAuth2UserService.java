@@ -1,7 +1,7 @@
 package com.chapchapauthservice.global.security.oauth2;
 
-import com.chapchapauthserivce.domain.auth.service.KakaoAuth2Service;
-import com.chapchapauthserivce.global.response.constant.CustomResponseCode;
+import com.chapchapauthservice.domain.auth.service.KakaoOAuth2Service;
+import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import jakarta.annotation.Nullable;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +15,20 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class DelegatingOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-    private final KakaoAuth2Service kakaoAuth2Service;
+    
+    // 로그인 요청의 provider에 따라 실제 처리 서비스를 선택
+    private final KakaoOAuth2Service kakaoOAuth2Service;
 
     @Override
     public @Nullable OAuth2User loadUser(@NonNull OAuth2UserRequest request) throws OAuth2AuthenticationException {
         // OAuth2의 registrationId 흭득
         String registrationId = request.getClientRegistration().getRegistrationId();
+
+        // application.yaml에 등록된 kakao 로그인 요청을 KakaoOAuth2Service로 전달
         return switch (registrationId) {
-            case "kakao" -> kakaoAuth2Service.loadUser(request);
+            case "kakao" -> kakaoOAuth2Service.loadUser(request);
+            
+            // 아직 지원하지 않는 소셜 로그인은 명확하게 실패 처리
             default -> throw new OAuth2AuthenticationException(
                 new OAuth2Error(
                     CustomResponseCode.UNSUPPORTED_PROVIDER_ERROR.getCode(),
