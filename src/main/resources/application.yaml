@@ -1,0 +1,130 @@
+server:
+  port: ${APP_PORT}
+
+spring:
+  application:
+    name: auth-service
+    version: v1
+  web:
+    error:
+      include-stacktrace: always
+      include-message: always
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  # DB
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+    defer-datasource-initialization: true
+  sql:
+    init:
+      data-locations: classpath*:dummy/*.sql
+      mode: always
+      platform: all
+
+  # Security & OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            # 카카오 개발자 센터에서 발급받은 REST API
+            client-id: ${KAKAO_CLIENT_ID}
+            # 추가적인 보안 인증키(카카오 내 설정에서 활성화 하지 않은 경우는 생략 가능)
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            # 카카오 로그인을 마친 후 카카오 인증 서버가 인가코드를 전달받을 콜백 주소
+            redirect-uri: "${GATEWAY_URI}/api/auth/oauth2/callback/{registrationId}"
+            # OAuth2의 가장 대표적인 인증 방식
+            authorization-grant-type: authorization_code
+            # client-id와 secret을 전송할 때, Http Post Body 데이터를 전송
+            client-authentication-method: client_secret_post
+            # 카카오로부터 전달 받고자 하는 사용자 정보 설정
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+        provider:
+          kakao:
+            # 사용자에게 카카오 로그인 창을 띄워주는 인증 요청 URL
+            authorization-uri: "https://kauth.kakao.com/oauth/authorize"
+            # 로그인 성공 후 전달받은 인가코드로 Access Token을 발급 받는 URL
+            token-uri: "https://kauth.kakao.com/oauth/token"
+            # 발급받은 Access Token을 이용해서 실제 사용자 프로필 정보를 가져오는 URL
+            user-info-uri: "https://kapi.kakao.com/v2/user/me"
+            # 카카오 응답에서 사용자 식별을 위한 필드명
+            user-name-attribute: id
+
+
+# Springdoc Openapi
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    enabled: false
+  api-docs:
+    path: /api-docs
+  open-api:
+    servers:
+      - url: ${GATEWAY_URI}
+        description: ${APP_DESCRIPTION}
+
+# Log
+logging:
+  file:
+    name: logs/error.log
+  level:
+    root: info
+    com.meerkatgramv2auth: debug
+
+
+# Security & JWT
+jwt:
+  secure: false
+  issuer: chapchap@chapchap.kr
+  type: JWT
+  access-token-expiry: 100000000
+  refresh-token-expiry: 1296000000
+  refresh-token-cookie-name: refresh-token
+  refresh-token-cookie-expiry: 1296000
+  secret: ${JWT_SECRET}
+  header-key: Authorization
+  scheme: Bearer
+  reissue-uri: /api/auth/reissue-token
+
+# minio
+minio:
+  minio-endpoint: ${FILE_ENDPOINT_URI}
+  minio-bucket: ${FILE_BUCKET}
+  minio-access-key: ${FILE_ACCESS_KEY}
+  minio-secret-key: ${FILE_SECRET_KEY}
+  minio-profile-path: ${FILE_PROFILE_PATH}
+  allow-image-extensions: [
+    "image/jpg",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp"
+  ]
+
+# Sub Service
+sub-service:
+  frontend-callback-uri: ${FRONTEND_CALLBACK_URI}
