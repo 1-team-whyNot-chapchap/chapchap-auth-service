@@ -1,34 +1,21 @@
 package com.chapchapauthservice.domain.user.entity;
 
-import com.chapchapauthservice.global.security.constant.ProviderPolicy;
 import com.chapchapauthservice.global.security.constant.RolePolicy;
+import com.chapchapauthservice.global.security.constant.SubscriptionStatusPolicy;
 import com.chapchapauthservice.global.security.constant.UserStatusPolicy;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "users",
-        // 소셜 로그인 계정을 중복 가입하지 못하도록 하는 복합 유니크 제약조건
-        // @UniqueConstraint: 여러 컬럼 값을 묶어 중복 여부를 검사
-        // provider와 provider_user_id가 모두 같을 때만 중복으로 판단
-        // 서로 다른 소셜 제공자의 같은 ID 값은 별도 계정으로 허용
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_users_provider_provider_user_id",
-                        columnNames = {"provider", "provider_user_id"}
-                )
-        }
-)
+@Table(name = "users")
 @Getter
-@SQLDelete(sql = "UPDATE users SET deleted_at = NOW() WHERE user_id = ?")
-@FilterDef(name = "softDelete")
-@Filter(name = "softDelete", condition = "deleted_at IS NULL")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
     @Id
@@ -36,35 +23,56 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ProviderPolicy provider;
+    // 본인인증 DI를 HMAC-SHA-256으로 변환한 동일인 식별키
+    // 일반 사용자는 사용하지만 관리자 계정은 null일 수 있다.
+    @Column(name = "identity_key", length = 64, unique = true)
+    private String identityKey;
 
-    @Column(name = "provider_user_id", nullable = false, length = 100)
-    private String providerUserId;
-
-    @Column(length = 255)
-    private String email;
-
-    @Column(nullable = false, length = 50)
-    private String nickname;
-
-    @Column(name = "profile_image_url", length = 500)
-    private String profileImageUrl;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private RolePolicy role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private UserStatusPolicy status;
-
+    // 대표 배송지는 Subscription-Service가 소유한다.
+    // Auth-Service는 ID Projection만 저장한다.
     @Column(name = "default_address_id")
     private Long defaultAddressId;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    // 대표 배송지 Event의 최신성 판단용 Business Version
+    @Column(name = "default_address_version", nullable = false)
+    private Long defaultAddressVersion = 0L;
+
+    // Subscription-Service에서 전달받은 구독 상태 Projection
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_status", nullable = false, length = 20)
+    private SubscriptionStatusPolicy subscriptionStatus =
+            SubscriptionStatusPolicy.INACTIVE;
+
+    // 구독 상태 Event의 최신성 판단용 Business Version
+    @Column(name = "subscription_version", nullable = false)
+    private Long subscriptionVersion = 0L;
+
+    @Column(name = "name", nullable = false, length = 50)
+    private String name;
+
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Column(name = "email", length = 255)
+    private String email;
+
+    // MinIO 파일 URL이 아니라 Object Key만 저장한다.
+    @Column(name = "profile_image_key", length = 255)
+    private String profileImageKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private RolePolicy role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserStatusPolicy status;
+
+    @Column(name = "identity_verified_at")
+    private LocalDateTime identityVerifiedAt;
+
+    @Column(name = "withdrawn_at")
+    private LocalDateTime withdrawnAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -74,32 +82,36 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    // 소셜 로그인으로 처음 접속한 사용자를 생성
-    public static User createSocialUser(
-            ProviderPolicy provider,
-            String providerUserId,
+    // 본인인증이 완료된 신규 일반 사용자 생성
+    public static User createCustomer(
+            String identityKey,
+            String name,
+            String phone,
             String email,
-            String nickname,
-            String profileImageUrl
+            LocalDateTime identityVerifiedAt
     ) {
         User user = new User();
 
-        user.provider = provider;
-        user.providerUserId = providerUserId;
+        user.identityKey = identityKey;
+
+        user.defaultAddressId = null;
+        user.defaultAddressVersion = 0L;
+
+        user.subscriptionStatus = SubscriptionStatusPolicy.INACTIVE;
+        user.subscriptionVersion = 0L;
+
+        user.name = name;
+        user.phone = phone;
         user.email = email;
-        user.nickname = nickname;
-        user.profileImageUrl = profileImageUrl;
-        
-        // 최초 가입한 사용자는 일반 고객/정상 상태로 시작
+
+        user.profileImageKey = null;
+
         user.role = RolePolicy.CUSTOMER;
         user.status = UserStatusPolicy.ACTIVE;
 
+        user.identityVerifiedAt = identityVerifiedAt;
+        user.withdrawnAt = null;
+
         return user;
     }
-
-    // 소셜 로그인으로 다시 접속한 탈퇴 계정을 복구
-    public void restore() {
-        this.deletedAt = null;
-    }
-
 }

@@ -118,7 +118,7 @@ public class AuthService {
     }
     
     // ADMIN, SUPER_ADMIN은 관리자 세션으로 분류하며
-    // 그 외에 CUSTOMER, STORE_OWNER, RIDER는 일반 사용자 세션으로 처리한다
+    // 그 외에 CUSTOMER, RIDER는 일반 사용자 세션으로 처리한다
     private SessionTypePolicy getSessionType(User user) {
         RolePolicy role = user.getRole();
 
