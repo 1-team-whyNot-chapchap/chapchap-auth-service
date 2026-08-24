@@ -1,5 +1,6 @@
 package com.chapchapauthservice.domain.auth.service;
 
+import com.chapchapauthservice.domain.auth.dto.IssuedToken;
 import com.chapchapauthservice.domain.auth.dto.VerifiedIdentity;
 import com.chapchapauthservice.domain.auth.entity.SignupSession;
 import com.chapchapauthservice.domain.auth.repository.SignupSessionRepository;
@@ -16,6 +17,7 @@ import com.chapchapauthservice.domain.user.repository.SocialAccountRepository;
 import com.chapchapauthservice.domain.user.repository.UserRepository;
 import com.chapchapauthservice.global.security.constant.ConsentStatusPolicy;
 import com.chapchapauthservice.global.security.constant.SignupSessionStatusPolicy;
+import com.chapchapauthservice.global.security.constant.UserStatusPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,9 +37,10 @@ public class SignupService {
     private final PolicyRepository policyRepository;
     private final SignupPolicyValidator signupPolicyValidator;
     private final UserPolicyConsentRepository userPolicyConsentRepository;
+    private final AuthService authService;
 
     @Transactional
-    public void completeSignup(SignupCompleteRequest request) {
+    public IssuedToken completeSignup(SignupCompleteRequest request) {
         
         // 가입 완료 중복 요청을 방지하기 위해 가입 세션을 행 잠금으로 조회
         SignupSession signupSession = signupSessionRepository.findByIdForUpdate(
@@ -100,6 +103,11 @@ public class SignupService {
             user = existingUser.get();
             isNewUser = false;
 
+            // 정지 또는 탈퇴 사용자는 새 로그인 수단 연결과 Token 발급 차단
+            if (user.getStatus() != UserStatusPolicy.ACTIVE || user.getWithdrawnAt() != null) {
+                throw new IllegalStateException("현재 사용할 수 없는 사용자 계정입니다.");
+            }
+
         } else {
 
             // 동일인이 없으면 신규 일반 사용자 생성
@@ -146,6 +154,15 @@ public class SignupService {
                 activePolicies,
                 request.policies()
         );
+
+        // 모든 가입 데이터 처리가 끝난 가입 세션을 완료/소비 상태로 변경
+        signupSession.complete();
+
+        // 가입 완료 사용자에게 최초 인증 세션과 Token 발급
+        IssuedToken issuedToken = authService.issuedToken(user);
+
+        // USER_REGISTERED Event는 Kafka 연동 단계에서 신규 사용자일 때만 트랜잭션 성공 후 발행한다.
+        return issuedToken;
     }
 
     // 회원가입 시 검증이 끝난 현재 정책에 대한 사용자 선택을 저장

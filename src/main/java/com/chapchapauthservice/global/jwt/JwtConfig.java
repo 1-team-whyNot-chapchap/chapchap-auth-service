@@ -25,6 +25,7 @@ public record JwtConfig(
         String secret,
         String headerKey,
         String scheme,
-        String reissueUri
+        // Refresh Token 쿠키를 사용할 Auth API 범위
+        String refreshTokenCookiePath
 ) {
 }

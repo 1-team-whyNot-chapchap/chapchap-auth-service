@@ -28,7 +28,7 @@ public class CookieManager {
             jwtConfig.refreshTokenCookieName(),
             refreshToken,
             getRefreshTokenCookieExpiry(sessionType),
-            jwtConfig.reissueUri()
+            jwtConfig.refreshTokenCookiePath()
         );
     }
 
@@ -38,7 +38,7 @@ public class CookieManager {
             jwtConfig.refreshTokenCookieName(),
             null,
             0,
-            jwtConfig.reissueUri()
+            jwtConfig.refreshTokenCookiePath()
         );
     }
 

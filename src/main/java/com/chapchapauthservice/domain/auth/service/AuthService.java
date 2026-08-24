@@ -1,6 +1,7 @@
 package com.chapchapauthservice.domain.auth.service;
 
 import com.chapchapauthservice.domain.auth.dto.IssuedRefreshToken;
+import com.chapchapauthservice.domain.auth.dto.IssuedToken;
 import com.chapchapauthservice.domain.auth.dto.ReissuedToken;
 import com.chapchapauthservice.domain.token.entity.AuthSession;
 import com.chapchapauthservice.domain.token.entity.RefreshToken;
@@ -17,8 +18,6 @@ import com.chapchapauthservice.global.security.token.RefreshTokenHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -84,32 +83,69 @@ public class AuthService {
         );
     }
 
-
-
-
-
-
-
-
-
-
-
-
-    // OAuth2 로그인 성공 후 리프레시 토큰을 발급하고 DB에 세션 정보를 저장한다
-    // 세션/토큰 저장이 한 묶음으로 성공하거나 실패하도록 Transactional를 적용한다.
+    // Refresh Token이 속한 로그인 세션을 폐기
     @Transactional
-    public IssuedRefreshToken issueRefreshToken(User user) {
-        // 사용자 권한에 따라 일반 서비스 또는 관리자 사이트 세션으로 구분
+    public void logout(String refreshToken) {
+        
+        // Refresh Token 원문을 DB 조회용 해시값으로 변환
+        String tokenHash = refreshTokenHasher.hash(refreshToken);
+        
+        // 이미 없거나 알 수 없는 Token이면 별도 오류 없이 종료
+        refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
+            // ifPresent는 값이 존재할 때만 해당 값을 꺼내 내부 로직을 실행한다.
+            // 조회된 Refresh Token이 존재하는 경우에만 해당 Token과 로그인 세션을 로그아웃 처리한다.
+            .ifPresent(savedRefreshToken -> {
+
+                AuthSession authSession = savedRefreshToken.getAuthSession();
+
+                // 아직 사용되지 않은 현재 Refresh Token은 소비 처리
+                if (savedRefreshToken.getConsumedAt() == null) {
+                    savedRefreshToken.consume();
+                }
+
+                // 해당 로그인 세션 전체 폐기
+                if (authSession.getRevokedAt() == null) {
+                    authSession.revoke();
+                }
+            });
+    }
+
+
+
+
+
+
+
+
+
+
+    // 로그인 또는 가입 완료 후 최초 인증 세션과 Token을 발급
+    @Transactional
+    public IssuedToken issuedToken(User user) {
+
+        // 사용자 권한에 따라 USER 또는 ADMIN 세션 결정
         SessionTypePolicy sessionType = getSessionType(user);
 
-        // 세션 만료 정책 계산과 저장은 AuthSessionService가 담당
+        // 인증 세션 생성
         AuthSession authSession = authSessionService.createSession(
             user,
             sessionType
         );
 
-        // 생성한 세션에 최초 리프레시 토큰 연결
-        return createRefreshToken(authSession);
+        // 최초 Refresh Token 생성 및 DB 저장
+        IssuedRefreshToken issuedRefreshToken = createRefreshToken(authSession);
+
+        // 세션 종류에 맞는 Access Token 생성
+        String accessToken = jwtProvider.generateAccessToken(
+            user,
+            sessionType
+        );
+
+        return new IssuedToken(
+            accessToken,
+            issuedRefreshToken.refreshToken(),
+            sessionType
+        );
     }
 
     // 전달받은 세션에 리프레시 토큰을 하나 발급해 연결한다

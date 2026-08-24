@@ -17,18 +17,9 @@ public record GlobalResponse<T> (
         return new GlobalResponse<Void>(customResponseCode.getCode(), customResponseCode.name(), null);
     }
 
-    // public static <T> GlobalResponse<T> success (T data) {
-    //     return GlobalResponse.<T>from(CustomResponseCode.SUCCESS, data);
-    //
-    // }
-    
     public static <T> ResponseEntity<GlobalResponse<T>> success(T data) {
         return ResponseEntity.ok(GlobalResponse.<T>from(CustomResponseCode.SUCCESS, data));
     }
-
-    // public static GlobalResponse<Void> success() {
-    //     return GlobalResponse.<Void>from(CustomResponseCode.SUCCESS, null);
-    // }
 
     public static ResponseEntity<GlobalResponse<Void>> success() {
         return ResponseEntity.ok(GlobalResponse.from(CustomResponseCode.SUCCESS, null));

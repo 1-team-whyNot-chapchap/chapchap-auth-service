@@ -1,6 +1,6 @@
 package com.chapchapauthservice.global.security.oauth2;
 
-import com.chapchapauthservice.domain.auth.dto.IssuedRefreshToken;
+import com.chapchapauthservice.domain.auth.dto.IssuedToken;
 import com.chapchapauthservice.domain.auth.service.AuthService;
 import com.chapchapauthservice.domain.user.entity.User;
 import com.chapchapauthservice.domain.user.repository.UserRepository;
@@ -99,14 +99,14 @@ public class OAuth2SuccessHandler
                                          )
                         );
 
-        IssuedRefreshToken issuedRefreshToken =
-            authService.issueRefreshToken(user);
+        IssuedToken issuedToken =
+            authService.issuedToken(user);
 
         // Refresh Token 원문은 HttpOnly Cookie로 전달
         cookieManager.setRefreshTokenToCookie(
             response,
-            issuedRefreshToken.refreshToken(),
-            issuedRefreshToken.sessionType()
+            issuedToken.refreshToken(),
+            issuedToken.sessionType()
         );
 
         getRedirectStrategy().sendRedirect(

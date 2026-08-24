@@ -115,7 +115,7 @@ jwt:
   secret: ${JWT_SECRET}
   header-key: Authorization
   scheme: Bearer
-  reissue-uri: /api/auth/reissue-token
+  refresh-token-cookie-path: /api/auth
 
 # minio
 minio:
