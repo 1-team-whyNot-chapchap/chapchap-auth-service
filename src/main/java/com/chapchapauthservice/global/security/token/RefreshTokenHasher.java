@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 @Component
 public class RefreshTokenHasher {
@@ -19,22 +20,12 @@ public class RefreshTokenHasher {
                     refreshToken.getBytes(StandardCharsets.UTF_8)
             );
             
-            // SHA-256 결과 바이트를 64자리 16진수 문자열로 변환
-            return toHex(hashBytes);
+            // SHA-256 결과를 Base64 문자열로 변환
+            return Base64.getEncoder()
+                       .encodeToString(hashBytes);
         } catch (NoSuchAlgorithmException e) {
             // SHA-256은 Java 기본 제공 알고리즘이므로 발생하면 서버 설정 문제로 처리
             throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다.", e);
         }
-    }
-
-    // 해시 바이트 배열을 DB에 저장할 수 있는 16진수 문자열로 변환
-    private String toHex(byte[] bytes) {
-        StringBuilder builder = new StringBuilder();
-
-        for (byte value : bytes) {
-            builder.append(String.format("%02x", value));
-        }
-
-        return builder.toString();
     }
 }

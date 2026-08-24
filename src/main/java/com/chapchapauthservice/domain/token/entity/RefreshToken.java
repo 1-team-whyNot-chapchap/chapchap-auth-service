@@ -33,7 +33,7 @@ public class RefreshToken {
      * 실제 토큰 문자열은 DB에 저장하지 않는다.
      * 토큰을 해시 처리한 값으로만 비교해 유출 피해를 줄인다.
      */
-    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
+    @Column(name = "token_hash", nullable = false, unique = true, length = 44)
     private String tokenHash;
 
     // 토큰 자체의 만료 시각으로, 세션이 살아 있어도 이 시간이 지나면 사용할 수 없다.

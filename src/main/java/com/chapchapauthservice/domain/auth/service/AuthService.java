@@ -90,7 +90,7 @@ public class AuthService {
         
         // 로그인 세션을 먼저 생성한 뒤, 리프레시 토큰을 해당 세션에 연결
         AuthSession authSession = authSessionRepository.save(
-                AuthSession.create(user, sessionType, expiresAt)
+                AuthSession.create(user, sessionType.getSessionType(), expiresAt,)
         );
 
         return createRefreshToken(authSession);
