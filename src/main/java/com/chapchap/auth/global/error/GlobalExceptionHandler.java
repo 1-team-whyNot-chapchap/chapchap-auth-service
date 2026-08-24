@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Map;
@@ -75,6 +76,12 @@ public class GlobalExceptionHandler {
              ));
 
         log.debug(CustomResponseCode.INVALID_PARAMETER_ERROR.name(), errors);
+        return this.generateErrorResponse(CustomResponseCode.INVALID_PARAMETER_ERROR);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<GlobalResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        log.debug(CustomResponseCode.INVALID_PARAMETER_ERROR.name(), e);
         return this.generateErrorResponse(CustomResponseCode.INVALID_PARAMETER_ERROR);
     }
 
