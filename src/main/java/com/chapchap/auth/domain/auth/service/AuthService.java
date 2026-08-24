@@ -9,6 +9,7 @@ import com.chapchap.auth.domain.token.repository.AuthSessionRepository;
 import com.chapchap.auth.domain.token.repository.RefreshTokenRepository;
 import com.chapchap.auth.domain.token.service.AuthSessionService;
 import com.chapchap.auth.domain.user.entity.User;
+import com.chapchap.auth.domain.audit.service.AuditLogService;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
 import com.chapchap.auth.global.jwt.JwtProvider;
 import com.chapchap.auth.global.security.constant.RolePolicy;
@@ -29,6 +30,7 @@ public class AuthService {
     private final RefreshTokenHasher refreshTokenHasher;
     private final AuthSessionService authSessionService;
     private final RefreshTokenGenerator refreshTokenGenerator;
+    private final AuditLogService auditLogService;
 
     // 쿠키로 전달받은 리프레시 토큰으로 새 토큰을 발급한다.
     // 이미 사용된 토큰이 다시 들어오면 해당 로그인 세션 전체를 폐기한다.
@@ -49,6 +51,7 @@ public class AuthService {
         if (savedRefreshToken.getConsumedAt() != null) {
             authSession.revoke();
             authSessionRepository.save(authSession);
+            auditLogService.recordRefreshTokenReuse(authSession.getUser().getId(), authSession.getId());
 
             throw new InvalidTokenException("이미 사용된 리프레시 토큰입니다.");
         }
@@ -119,18 +122,20 @@ public class AuthService {
 
 
 
-    // 로그인 또는 가입 완료 후 최초 인증 세션과 Token을 발급
+    // OAuth 기존 회원 로그인 시 Refresh Cookie 전달용 세션과 Token을 발급한다.
+    // Access Token은 callback 이후 재발급 API에서 응답 본문으로 전달한다.
+    @Transactional
+    public IssuedRefreshToken issueInitialRefreshToken(User user) {
+        AuthSession authSession = createAuthSession(user);
+
+        return createRefreshToken(authSession);
+    }
+
+    // 가입 완료 후 최초 인증 세션과 Access/Refresh Token을 발급한다.
     @Transactional
     public IssuedToken issueToken(User user) {
-
-        // 사용자 권한에 따라 USER 또는 ADMIN 세션 결정
-        SessionTypePolicy sessionType = getSessionType(user);
-
-        // 인증 세션 생성
-        AuthSession authSession = authSessionService.createSession(
-            user,
-            sessionType
-        );
+        AuthSession authSession = createAuthSession(user);
+        SessionTypePolicy sessionType = authSession.getSessionType();
 
         // 최초 Refresh Token 생성 및 DB 저장
         IssuedRefreshToken issuedRefreshToken = createRefreshToken(authSession);
@@ -146,6 +151,12 @@ public class AuthService {
             issuedRefreshToken.refreshToken(),
             sessionType
         );
+    }
+
+    private AuthSession createAuthSession(User user) {
+        SessionTypePolicy sessionType = getSessionType(user);
+
+        return authSessionService.createSession(user, sessionType);
     }
 
     // 전달받은 세션에 리프레시 토큰을 하나 발급해 연결한다

@@ -67,4 +67,8 @@ public class AuthSessionService {
             idleExpiresAt
         );
     }
+
+    public void revokeAllSessions(User user) {
+        authSessionRepository.findAllByUser(user).forEach(AuthSession::revoke);
+    }
 }

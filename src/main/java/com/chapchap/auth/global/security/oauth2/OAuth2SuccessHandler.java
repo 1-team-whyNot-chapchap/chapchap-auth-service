@@ -1,6 +1,6 @@
 package com.chapchap.auth.global.security.oauth2;
 
-import com.chapchap.auth.domain.auth.dto.IssuedToken;
+import com.chapchap.auth.domain.auth.dto.IssuedRefreshToken;
 import com.chapchap.auth.domain.auth.service.AuthService;
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.UserRepository;
@@ -99,14 +99,16 @@ public class OAuth2SuccessHandler
                                          )
                         );
 
-        IssuedToken issuedToken =
-            authService.issueToken(user);
+        IssuedRefreshToken issuedRefreshToken =
+            authService.issueInitialRefreshToken(user);
 
-        // Refresh Token 원문은 HttpOnly Cookie로 전달
+        // Access Token은 redirect URL에 노출하지 않는다.
+        // Refresh Token 원문만 HttpOnly Cookie로 전달하고 callback 이후
+        // /api/auth/reissue-token에서 Access Token을 응답 본문으로 받는다.
         cookieManager.setRefreshTokenToCookie(
             response,
-            issuedToken.refreshToken(),
-            issuedToken.sessionType()
+            issuedRefreshToken.refreshToken(),
+            issuedRefreshToken.sessionType()
         );
 
         getRedirectStrategy().sendRedirect(

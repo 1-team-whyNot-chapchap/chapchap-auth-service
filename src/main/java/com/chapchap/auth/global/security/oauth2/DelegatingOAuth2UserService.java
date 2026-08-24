@@ -1,6 +1,7 @@
 package com.chapchap.auth.global.security.oauth2;
 
 import com.chapchap.auth.domain.auth.service.KakaoOAuth2Service;
+import com.chapchap.auth.domain.auth.service.GoogleOAuth2Service;
 import com.chapchap.auth.global.response.constant.CustomResponseCode;
 import jakarta.annotation.Nullable;
 import lombok.NonNull;
@@ -18,6 +19,7 @@ public class DelegatingOAuth2UserService implements OAuth2UserService<OAuth2User
     
     // 로그인 요청의 provider에 따라 실제 처리 서비스를 선택
     private final KakaoOAuth2Service kakaoOAuth2Service;
+    private final GoogleOAuth2Service googleOAuth2Service;
 
     @Override
     public @Nullable OAuth2User loadUser(@NonNull OAuth2UserRequest request) throws OAuth2AuthenticationException {
@@ -27,6 +29,7 @@ public class DelegatingOAuth2UserService implements OAuth2UserService<OAuth2User
         // application.yaml에 등록된 kakao 로그인 요청을 KakaoOAuth2Service로 전달
         return switch (registrationId) {
             case "kakao" -> kakaoOAuth2Service.loadUser(request);
+            case "google" -> googleOAuth2Service.loadUser(request);
             
             // 아직 지원하지 않는 소셜 로그인은 명확하게 실패 처리
             default -> throw new OAuth2AuthenticationException(
