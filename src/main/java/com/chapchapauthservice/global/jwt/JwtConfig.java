@@ -8,17 +8,18 @@ public record JwtConfig(
         String issuer,
         String type,
 
-        // 액세스 토큰 만료 시간(밀리초)
-        int accessTokenExpiry,
+        // 일반 사용자 액세스 토큰 만료 시간(밀리초)
+        int userAccessTokenExpiry,
 
-        // 일반 사용자와 관리자의 리프레시 토큰 만료 시간(밀리초)
-        int userRefreshTokenExpiry,
-        int adminRefreshTokenExpiry,
+        // 관리자 액세스 토큰 만료 시간(밀리초)
+        int adminAccessTokenExpiry,
 
         String refreshTokenCookieName,
 
-        // 일반 사용자와 관리자의 리프레시 쿠키 유지 시간(초)
+        // 일반 사용자 리프레시 쿠키 유지 시간(초)
         int userRefreshTokenCookieExpiry,
+
+        // 관리자 리프레시 쿠키 유지 시간(초)
         int adminRefreshTokenCookieExpiry,
 
         String secret,

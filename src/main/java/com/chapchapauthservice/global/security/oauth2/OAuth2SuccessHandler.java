@@ -15,13 +15,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class OAuth2SuccessHandler
+    extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
     private final AuthService authService;
@@ -30,35 +32,128 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     @Override
     public void onAuthenticationSuccess(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull Authentication authentication
-            ) throws IOException, ServletException {
+        @NonNull HttpServletRequest request,
+        @NonNull HttpServletResponse response,
+        @NonNull Authentication authentication
+    ) throws IOException, ServletException {
 
-        // KakaoOAuth2Service가 전달한 우리 서비스의 user_id를 가져온다
-        DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        Long userId = (Long) attributes.get("id");
-        
-        // 로그인 대상을 다시 조회한 뒤, 세션과 리프레시 토큰을 발급한다
-        User user = userRepository.findById(userId)
-                .orElseThrow();
+        DefaultOAuth2User oAuth2User =
+            (DefaultOAuth2User) authentication.getPrincipal();
 
-        IssuedRefreshToken issuedRefreshToken = authService.issueRefreshToken(user);
+        Map<String, Object> attributes =
+            oAuth2User.getAttributes();
 
-        // 실제 리프레시 토큰을 HttpOnly 쿠키에만 저장한다
-        // DB 에는 AuthService가 저장한 토큰 해시값만 존재한다.
-        cookieManager.setRefreshTokenToCookie(
-                response,
-                issuedRefreshToken.refreshToken(),
-                issuedRefreshToken.sessionType()
-        );
+        String authFlow =
+            String.valueOf(attributes.get("authFlow"));
 
-        // 초큰 발급이 끝나면 프론트엔드 로그인 완료 화면으로 이동한다.
-        getRedirectStrategy().sendRedirect(
+        // 기존 회원 로그인
+        if ("LOGIN".equals(authFlow)) {
+            handleLogin(
                 request,
                 response,
-                subServiceUriConfig.frontendCallbackUri()
+                attributes
+            );
+
+            return;
+        }
+
+        // 신규 회원 가입 시작
+        if ("SIGNUP".equals(authFlow)) {
+            handleSignup(
+                request,
+                response,
+                attributes
+            );
+
+            return;
+        }
+
+        throw new IllegalStateException(
+            "지원하지 않는 OAuth2 인증 흐름입니다."
+        );
+    }
+
+
+    // 기존 회원에게 인증 세션과 Refresh Token 발급
+    private void handleLogin(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Map<String, Object> attributes
+    ) throws IOException {
+
+        Object userIdValue =
+            attributes.get("userId");
+
+        if (!(userIdValue instanceof Number number)) {
+            throw new IllegalStateException(
+                "OAuth2 로그인 사용자 ID가 올바르지 않습니다."
+            );
+        }
+
+        Long userId = number.longValue();
+
+        User user = userRepository.findById(userId)
+                        .orElseThrow(() ->
+                                         new IllegalStateException(
+                                             "로그인 사용자를 찾을 수 없습니다."
+                                         )
+                        );
+
+        IssuedRefreshToken issuedRefreshToken =
+            authService.issueRefreshToken(user);
+
+        // Refresh Token 원문은 HttpOnly Cookie로 전달
+        cookieManager.setRefreshTokenToCookie(
+            response,
+            issuedRefreshToken.refreshToken(),
+            issuedRefreshToken.sessionType()
+        );
+
+        getRedirectStrategy().sendRedirect(
+            request,
+            response,
+            subServiceUriConfig.frontendCallbackUri()
+        );
+    }
+
+
+    // 신규 회원에게 Token 대신 signupSessionId만 전달
+    private void handleSignup(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Map<String, Object> attributes
+    ) throws IOException {
+
+        Object signupSessionIdValue =
+            attributes.get("signupSessionId");
+
+        if (signupSessionIdValue == null) {
+            throw new IllegalStateException(
+                "가입 세션 ID가 존재하지 않습니다."
+            );
+        }
+
+        String signupSessionId =
+            String.valueOf(signupSessionIdValue);
+
+        String redirectUri =
+            UriComponentsBuilder
+                .fromUriString(
+                    subServiceUriConfig.frontendCallbackUri()
+                )
+                .queryParam(
+                    "signupSessionId",
+                    signupSessionId
+                )
+                .build()
+                .encode()
+                .toUriString();
+
+        // 신규 가입자는 Access/Refresh Token을 발급하지 않는다.
+        getRedirectStrategy().sendRedirect(
+            request,
+            response,
+            redirectUri
         );
     }
 }

@@ -1,10 +1,13 @@
 package com.chapchapauthservice.domain.auth.service;
 
+import com.chapchapauthservice.domain.auth.entity.SignupSession;
+import com.chapchapauthservice.domain.auth.repository.SignupSessionRepository;
+import com.chapchapauthservice.domain.user.entity.SocialAccount;
 import com.chapchapauthservice.domain.user.entity.User;
-import com.chapchapauthservice.domain.user.repository.UserRepository;
-import com.chapchapauthservice.global.config.jpa.JPAWithDeleted;
+import com.chapchapauthservice.domain.user.repository.SocialAccountRepository;
 import com.chapchapauthservice.global.response.constant.CustomResponseCode;
 import com.chapchapauthservice.global.security.constant.ProviderPolicy;
+import com.chapchapauthservice.global.security.constant.UserStatusPolicy;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,96 +22,133 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class KakaoOAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class KakaoOAuth2Service
+    implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private final UserRepository userRepository;
+    private final SocialAccountRepository socialAccountRepository;
+    private final SignupSessionRepository signupSessionRepository;
 
-    /*
-     * Soft Delete된 회원도 조회해야 탈퇴 계정을 새로 만들지 않고 복구할 수 있다.
-     * 카카오 응답의 중첩 Map 형변환 경고는 이 메서드 범위에서만 숨긴다.
-     */
-    @JPAWithDeleted
-    @SuppressWarnings("unchecked")
     @Override
-    public OAuth2User loadUser(@NonNull OAuth2UserRequest request) {
-        // Spring Security 기본 구현체로 카카오에서 사용자 정보를 획득
-        OAuth2User oAuthUser = new DefaultOAuth2UserService().loadUser(request);
+    public OAuth2User loadUser(
+        @NonNull OAuth2UserRequest request
+    ) {
 
-        // 카카오 응답에서 가입·로그인에 필요한 정보 파싱
-        Map<String, Object> attributes = oAuthUser.getAttributes();
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+        // 카카오 Access Token으로 사용자 정보 조회
+        OAuth2User oAuthUser =
+            new DefaultOAuth2UserService()
+                .loadUser(request);
 
-        String providerUserId = String.valueOf(attributes.get("id"));
-        String email = (String) kakaoAccount.get("email");
-        String nickname = (String) profile.get("nickname");
-        String profileImageUrl = (String) profile.get("profile_image_url");
+        Map<String, Object> attributes =
+            oAuthUser.getAttributes();
 
-        // 닉네임은 users 테이블의 필수값이므로, 받지 못하면 로그인 실패 처리
-        if (nickname == null || nickname.isBlank()) {
-            throw new OAuth2AuthenticationException(
-                    new OAuth2Error(
-                            CustomResponseCode.OAUTH2_ERROR.getCode(),
-                            "카카오 닉네임 정보를 가져올 수 없습니다.",
-                            null
-                    )
+        // 카카오 사용자 고유 ID 확인
+        Object providerUserIdValue =
+            attributes.get("id");
+
+        if (providerUserIdValue == null) {
+            throw createOAuth2Exception(
+                "카카오 사용자 식별자를 가져올 수 없습니다."
             );
         }
 
-        /*
-         * provider + providerUserId 기준으로 회원 조회
-         * 1. 회원이 없으면 소셜 회원가입
-         * 2. 탈퇴 회원이면 기존 계정을 복구
-         */
-        User user = userRepository
-                .findByProviderAndProviderUserId(ProviderPolicy.KAKAO, providerUserId)
-                .orElseGet(() -> createKakaoUser(
-                        providerUserId,
-                        email,
-                        nickname,
-                        profileImageUrl
-                ));
+        String providerUserId =
+            String.valueOf(providerUserIdValue);
 
-        // 같은 카카오 계정으로 재로그인한 탈퇴 회원은 기존 계정을 복구
-        if (user.getDeletedAt() != null) {
-            user.restore();
-            userRepository.save(user);
+        // 등록된 카카오 로그인 수단 조회
+        Optional<SocialAccount> existingSocialAccount =
+            socialAccountRepository
+                .findByProviderAndProviderUserId(
+                    ProviderPolicy.KAKAO,
+                    providerUserId
+                );
+
+        // 이미 등록된 소셜 계정이면 정상 로그인 흐름
+        if (existingSocialAccount.isPresent()) {
+            return createLoginPrincipal(
+                existingSocialAccount.get()
+            );
         }
 
-        /*
-         * OAuth2 로그인 성공 후 SuccessHandler에 전달할 내부 회원 정보
-         * 여기의 id는 카카오 ID가 아니라 우리 users 테이블의 user_id다.
-         */
-        return new DefaultOAuth2User(
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
-                Map.of(
-                        "id", user.getId(),
-                        "role", user.getRole().name()
-                ),
-                "id"
+        // 미등록 소셜 계정은 User를 만들지 않고 가입 세션만 생성
+        SignupSession signupSession =
+            signupSessionRepository.save(
+                SignupSession.createPending(
+                    ProviderPolicy.KAKAO,
+                    providerUserId
+                )
+            );
+
+        return createSignupPrincipal(
+            oAuthUser,
+            signupSession
         );
     }
 
-    // 카카오에서 처음 로그인한 사용자를 CUSTOMER 권한으로 생성
-    private User createKakaoUser(
-            String providerUserId,
-            String email,
-            String nickname,
-            String profileImageUrl
+
+    // 기존 회원 로그인용 OAuth2 Principal 생성
+    private OAuth2User createLoginPrincipal(
+        SocialAccount socialAccount
     ) {
-        User user = User.createSocialUser(
-                ProviderPolicy.KAKAO,
-                providerUserId,
-                email,
-                nickname,
-                profileImageUrl
-        );
 
-        return userRepository.save(user);
+        User user = socialAccount.getUser();
+
+        // ACTIVE 사용자만 Token 발급 단계로 이동 가능
+        if (user.getStatus() != UserStatusPolicy.ACTIVE
+                || user.getWithdrawnAt() != null) {
+
+            throw createOAuth2Exception(
+                "현재 로그인할 수 없는 계정입니다."
+            );
+        }
+
+        return new DefaultOAuth2User(
+            List.of(
+                new SimpleGrantedAuthority(
+                    "ROLE_" + user.getRole().name()
+                )
+            ),
+            Map.of(
+                "authFlow", "LOGIN",
+                "userId", user.getId(),
+                "role", user.getRole().name()
+            ),
+            "userId"
+        );
     }
 
 
+    // 신규 가입 진행용 OAuth2 Principal 생성
+    private OAuth2User createSignupPrincipal(
+        OAuth2User oAuthUser,
+        SignupSession signupSession
+    ) {
+
+        return new DefaultOAuth2User(
+            oAuthUser.getAuthorities(),
+            Map.of(
+                "authFlow", "SIGNUP",
+                "signupSessionId", signupSession.getId(),
+                "provider", signupSession.getProvider().name()
+            ),
+            "signupSessionId"
+        );
+    }
+
+
+    // OAuth2 인증 과정의 비즈니스 실패를 Spring Security 예외로 변환
+    private OAuth2AuthenticationException createOAuth2Exception(
+        String message
+    ) {
+        return new OAuth2AuthenticationException(
+            new OAuth2Error(
+                CustomResponseCode.OAUTH2_ERROR.getCode(),
+                message,
+                null
+            )
+        );
+    }
 }

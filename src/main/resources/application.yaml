@@ -101,10 +101,17 @@ jwt:
   secure: false
   issuer: chapchap@chapchap.kr
   type: JWT
-  access-token-expiry: 100000000
-  refresh-token-expiry: 1296000000
+
+  # Access Token 만료 시간(밀리초)
+  user-access-token-expiry: 1800000
+  admin-access-token-expiry: 900000
+
   refresh-token-cookie-name: refresh-token
-  refresh-token-cookie-expiry: 1296000
+
+  # Refresh Token 쿠키 유지 시간(초)
+  user-refresh-token-cookie-expiry: 1209600
+  admin-refresh-token-cookie-expiry: 1800
+
   secret: ${JWT_SECRET}
   header-key: Authorization
   scheme: Bearer

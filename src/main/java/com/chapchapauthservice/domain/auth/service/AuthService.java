@@ -6,11 +6,14 @@ import com.chapchapauthservice.domain.token.entity.AuthSession;
 import com.chapchapauthservice.domain.token.entity.RefreshToken;
 import com.chapchapauthservice.domain.token.repository.AuthSessionRepository;
 import com.chapchapauthservice.domain.token.repository.RefreshTokenRepository;
+import com.chapchapauthservice.domain.token.service.AuthSessionService;
 import com.chapchapauthservice.domain.user.entity.User;
 import com.chapchapauthservice.global.error.custom.business.InvalidTokenException;
 import com.chapchapauthservice.global.jwt.JwtProvider;
 import com.chapchapauthservice.global.security.constant.RolePolicy;
 import com.chapchapauthservice.global.security.constant.SessionTypePolicy;
+import com.chapchapauthservice.global.security.token.RefreshTokenGenerator;
+import com.chapchapauthservice.global.security.token.RefreshTokenHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +27,16 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final AuthSessionRepository authSessionRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenHasher refreshTokenHasher;
+    private final AuthSessionService authSessionService;
+    private final RefreshTokenGenerator refreshTokenGenerator;
 
     // 쿠키로 전달받은 리프레시 토큰으로 새 토큰을 발급한다.
     // 이미 사용된 토큰이 다시 들어오면 해당 로그인 세션 전체를 폐기한다.
     @Transactional(noRollbackFor = InvalidTokenException.class)
     public ReissuedToken reissueRefreshToken(String refreshToken) {
         // 쿠키의 토큰 원문을 DB 조회용 해시값으로 변환
-        String tokenHash = jwtProvider.hashRefreshToken(refreshToken);
+        String tokenHash = refreshTokenHasher.hash(refreshToken);
         
         // 잠금 조회로 동시에 들어온 재발급 요청을 순서대로 처리
         RefreshToken savedRefreshToken = refreshTokenRepository
@@ -53,12 +59,23 @@ public class AuthService {
             throw new InvalidTokenException("만료되었거나 사용할 수 없는 리프레시 토큰입니다.");
         }
         
-        // 기존 토큰을 사용 완료 처리하고, 같은 세션에 새 리프레시 토큰을 연결
+        // 기존 리프레시 토큰을 재사용할 수 없도록 소비 처리
         savedRefreshToken.consume();
+
+        // 일반 사용자 세션이면 유휴 만료 시작을 연장
+        // 관리자 세션은 AuthSessionService 내부에서 연장하지 않는다.
+        authSessionService.extendUserIdleExpiration(
+            authSession
+        );
+
+        // 갱신된 세션 만료 시작을 기준으로 새로운 리프레시 토큰 발급
         IssuedRefreshToken issuedRefreshToken = createRefreshToken(authSession);
         
         // 새 액세스 토큰은 응답 본문으로 전달할 값
-        String accessToken = jwtProvider.generateAccessToken(authSession.getUser());
+        String accessToken = jwtProvider.generateAccessToken(
+            authSession.getUser(),
+            authSession.getSessionType()
+            );
 
         return new ReissuedToken(
                 accessToken,
@@ -84,37 +101,39 @@ public class AuthService {
     public IssuedRefreshToken issueRefreshToken(User user) {
         // 사용자 권한에 따라 일반 서비스 또는 관리자 사이트 세션으로 구분
         SessionTypePolicy sessionType = getSessionType(user);
-        
-        // JWT 만료 시간과 DB 세션 만료 시간을 동일한 기준으로 설정
-        LocalDateTime expiresAt = getSessionExpiresAt(sessionType);
-        
-        // 로그인 세션을 먼저 생성한 뒤, 리프레시 토큰을 해당 세션에 연결
-        AuthSession authSession = authSessionRepository.save(
-                AuthSession.create(user, sessionType.getSessionType(), expiresAt,)
+
+        // 세션 만료 정책 계산과 저장은 AuthSessionService가 담당
+        AuthSession authSession = authSessionService.createSession(
+            user,
+            sessionType
         );
 
+        // 생성한 세션에 최초 리프레시 토큰 연결
         return createRefreshToken(authSession);
     }
 
     // 전달받은 세션에 리프레시 토큰을 하나 발급해 연결한다
     // DB 에는 토큰 원문 대신 해시값만 저장한다
     private IssuedRefreshToken createRefreshToken(AuthSession authSession) {
-        String refreshToken = jwtProvider.generateRefreshToken(
-                authSession.getUser(),
-                authSession.getSessionType()
+        // 사용자에게 전달할 예측 불가능한 리프레시 토큰 원문 생성
+        String refreshToken = refreshTokenGenerator.generate();
+
+        // DB 저장 및 조회를 위한 SHA-256 + Base64 해시 생성
+        String tokenHash = refreshTokenHasher.hash(refreshToken);
+
+        // 리프레시 토큰은 현재 세션의 유휴 만료 시각까지만 사용 가능
+        RefreshToken tokenEntity = RefreshToken.create(
+            authSession,
+            tokenHash,
+            authSession.getIdleExpiresAt()
         );
 
-        String tokenHash = jwtProvider.hashRefreshToken(refreshToken);
+        refreshTokenRepository.save(tokenEntity);
 
-        refreshTokenRepository.save(
-                RefreshToken.create(
-                        authSession,
-                        tokenHash,
-                        authSession.getExpiresAt()
-                )
+        return new IssuedRefreshToken(
+            refreshToken,
+            authSession.getSessionType()
         );
-
-        return new IssuedRefreshToken(refreshToken, authSession.getSessionType());
     }
     
     // ADMIN, SUPER_ADMIN은 관리자 세션으로 분류하며
@@ -127,14 +146,4 @@ public class AuthService {
             default -> SessionTypePolicy.USER;
         };
     }
-    
-    // 세션 종류에 따라 DB 세션의 만료 시작을 계산한다
-    // User는 14일, ADMIN은 30분 동안 로그인 상태를 유지한다
-    private LocalDateTime getSessionExpiresAt(SessionTypePolicy sessionType) {
-        return switch (sessionType) {
-            case USER -> LocalDateTime.now().plusDays(14);
-            case ADMIN -> LocalDateTime.now().plusMinutes(30);
-        };
-    }
-    
 }
