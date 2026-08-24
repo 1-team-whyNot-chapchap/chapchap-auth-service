@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface SocialAccountRepository extends JpaRepository<SocialAccount, Long> {
 
@@ -27,4 +28,6 @@ public interface SocialAccountRepository extends JpaRepository<SocialAccount, Lo
     // 회원 탈퇴 시 해당 사용자의 모든 소셜 로그인 연결을 삭제
     // 사용자는 Kakao와 Google 계정을 동시에 연결할 수 있으므로 전체 삭제가 필요
     void deleteAllByUser(User user);
+
+    List<SocialAccount> findAllByUser(User user);
 }

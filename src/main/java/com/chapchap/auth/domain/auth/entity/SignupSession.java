@@ -2,6 +2,7 @@ package com.chapchap.auth.domain.auth.entity;
 
 import com.chapchap.auth.global.security.constant.ProviderPolicy;
 import com.chapchap.auth.global.security.constant.SignupSessionStatusPolicy;
+import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -124,7 +125,7 @@ public class SignupSession {
     ) {
         // PENDING 상태에서만 본인인증 완료 상태로 변경할 수 있다.
         if (this.status != SignupSessionStatusPolicy.PENDING) {
-            throw new IllegalStateException("PENDING 상태의 가입 세션만 본인인증 완료 처리할 수 있습니다.");
+            throw new InvalidStateException("PENDING 상태의 가입 세션만 본인인증 완료 처리할 수 있습니다.");
         }
 
         this.identityVerificationId = identityVerificationId;
@@ -137,11 +138,11 @@ public class SignupSession {
     public void complete() {
 
         if (this.status != SignupSessionStatusPolicy.IDENTITY_VERIFIED) {
-            throw new IllegalStateException("본인인증이 완료된 가입 세션만 완료 처리할 수 있습니다.");
+            throw new InvalidStateException("본인인증이 완료된 가입 세션만 완료 처리할 수 있습니다.");
         }
 
         if (this.consumedAt != null) {
-            throw new IllegalStateException("이미 사용된 가입 세션입니다.");
+            throw new InvalidStateException("이미 사용된 가입 세션입니다.");
         }
 
         this.status = SignupSessionStatusPolicy.COMPLETED;
@@ -153,7 +154,7 @@ public class SignupSession {
         if (this.status != SignupSessionStatusPolicy.PENDING
                 && this.status != SignupSessionStatusPolicy.IDENTITY_VERIFIED
         ) {
-            throw new IllegalStateException("진행 중인 가입 세션만 실패 처리할 수 있습니다.");
+            throw new InvalidStateException("진행 중인 가입 세션만 실패 처리할 수 있습니다.");
         }
         this.status = SignupSessionStatusPolicy.FAILED;
     }

@@ -3,6 +3,7 @@ package com.chapchap.auth.domain.auth.validator;
 import com.chapchap.auth.domain.auth.request.PolicyConsentRequest;
 import com.chapchap.auth.domain.policy.entity.Policy;
 import com.chapchap.auth.global.security.constant.PolicyTypePolicy;
+import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -28,7 +29,7 @@ public class SignupPolicyValidator {
 
             // 같은 정책 ID가 요청에 두번 들어오는 것을 방지
             if (requestByPolicyId.put(request.policyId(), request) != null) {
-                throw new IllegalStateException("동일한 정책이 중복 제출되었습니다.");
+                throw new InvalidParameterException("동일한 정책이 중복 제출되었습니다.");
             }
         }
 
@@ -50,14 +51,14 @@ public class SignupPolicyValidator {
 
             // 필수 정책은 반드시 제출되어야 하고 AGREED 여야 한다.
             if (policy.isRequired() && (request == null || !Boolean.TRUE.equals(request.agreed()))) {
-                throw new IllegalStateException("필수 정책에 모두 동의해야 합니다.");
+                throw new InvalidParameterException("필수 정책에 모두 동의해야 합니다.");
             }
         }
         
         // 사용자가 과거 Version 또는 비활성 정책 ID를 제출했는지 확인
         for (PolicyConsentRequest request : requests) {
             if (!activePolicyIds.contains(request.policyId())) {
-            throw new IllegalStateException("현재 적용되지 않는 정책이 포함되어 있습니다.");
+            throw new InvalidParameterException("현재 적용되지 않는 정책이 포함되어 있습니다.");
             }
         }
     }

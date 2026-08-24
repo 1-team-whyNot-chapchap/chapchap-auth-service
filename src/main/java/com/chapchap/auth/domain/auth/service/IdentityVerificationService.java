@@ -5,6 +5,7 @@ import com.chapchap.auth.domain.auth.dto.IdentityVerification;
 import com.chapchap.auth.domain.auth.dto.VerifiedIdentity;
 import com.chapchap.auth.domain.auth.validator.SignupAgeValidator;
 import com.chapchap.auth.global.security.identity.IdentityKeyGenerator;
+import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +26,12 @@ public class IdentityVerificationService {
 
         // PortOne 에서 정상적으로 완료된 본인인증이 아니면 가입에 사용할 수 없다.
         if (!verification.verified()) {
-            throw new IllegalStateException("본인인증이 완료되지 않았습니다.");
+            throw new InvalidStateException("본인인증이 완료되지 않았습니다.");
         }
 
         // PortOne 에서 받은 생년월일을 이용해 만 14세 이상인지 확인한다.
         if (!signupAgeValidator.isEligible(verification.birthDate())) {
-            throw new IllegalStateException("만 14세 미만은 가입할 수 없습니다.");
+            throw new InvalidStateException("만 14세 미만은 가입할 수 없습니다.");
         }
 
         // DI 원문은 저장하지 않고 서버 Secret과 HMAC-SHA-256으로 동일인 식별용 identityKey를 생성한다.

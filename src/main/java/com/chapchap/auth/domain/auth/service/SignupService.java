@@ -15,6 +15,10 @@ import com.chapchap.auth.domain.user.entity.SocialAccount;
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.SocialAccountRepository;
 import com.chapchap.auth.domain.user.repository.UserRepository;
+import com.chapchap.auth.global.kafka.producer.AuthEventProducer;
+import com.chapchap.auth.global.error.custom.business.DuplicatedResourceException;
+import com.chapchap.auth.global.error.custom.business.InvalidStateException;
+import com.chapchap.auth.global.error.custom.business.NotFoundResourceException;
 import com.chapchap.auth.global.security.constant.ConsentStatusPolicy;
 import com.chapchap.auth.global.security.constant.SignupSessionStatusPolicy;
 import com.chapchap.auth.global.security.constant.UserStatusPolicy;
@@ -38,6 +42,7 @@ public class SignupService {
     private final SignupPolicyValidator signupPolicyValidator;
     private final UserPolicyConsentRepository userPolicyConsentRepository;
     private final AuthService authService;
+    private final AuthEventProducer authEventProducer;
 
     @Transactional
     public IssuedToken completeSignup(SignupCompleteRequest request) {
@@ -45,26 +50,26 @@ public class SignupService {
         // 가입 완료 중복 요청을 방지하기 위해 가입 세션을 행 잠금으로 조회
         SignupSession signupSession = signupSessionRepository.findByIdForUpdate(
                 request.signupSessionId()
-        ).orElseThrow(() -> new IllegalStateException("가입 세션을 찾을 수 없습니다."));
-        
-        // 가입을 시작할 수 있는 PENDING 상태인지 확인
-        if (signupSession.getStatus() != SignupSessionStatusPolicy.PENDING) {
-            throw new IllegalStateException("사용할 수 없는 가입 세션입니다.");
-        }
+        ).orElseThrow(() -> new NotFoundResourceException("가입 세션을 찾을 수 없습니다."));
         
         // 가입 세션의 15분 유효시간이 지났는지 확인
-        if (signupSession.isExpired()) {
-            throw new IllegalStateException("가입 세션이 만료되었습니다.");
+        if (signupSession.markExpiredIfNeeded()) {
+            throw new InvalidStateException("가입 세션이 만료되었습니다.");
+        }
+
+        // 가입을 시작할 수 있는 PENDING 상태인지 확인
+        if (signupSession.getStatus() != SignupSessionStatusPolicy.PENDING) {
+            throw new InvalidStateException("사용할 수 없는 가입 세션입니다.");
         }
         
         // 이미 가입 또는 계정 연결에 사용된 세션인지 확인
         if (signupSession.getConsumedAt() != null) {
-            throw new IllegalStateException("이미 사용된 가입 세션입니다.");
+            throw new InvalidStateException("이미 사용된 가입 세션입니다.");
         }
 
         // 동일한 본인인증 ID가 다른 가입 과정에서 이미 사용됐는지 확인
         if (signupSessionRepository.existsByIdentityVerificationId(request.identityVerificationId())) {
-            throw new IllegalStateException("이미 사용된 본인인증 정보입니다.");
+            throw new DuplicatedResourceException("이미 사용된 본인인증 정보입니다.");
         }
 
         // PortOne 본인인증 결과를 서버에서 재조회하고 연령 검증 및 identityKey 생성을 수행
@@ -105,7 +110,7 @@ public class SignupService {
 
             // 정지 또는 탈퇴 사용자는 새 로그인 수단 연결과 Token 발급 차단
             if (user.getStatus() != UserStatusPolicy.ACTIVE || user.getWithdrawnAt() != null) {
-                throw new IllegalStateException("현재 사용할 수 없는 사용자 계정입니다.");
+                throw new InvalidStateException("현재 사용할 수 없는 사용자 계정입니다.");
             }
 
         } else {
@@ -128,7 +133,7 @@ public class SignupService {
                 signupSession.getProvider(),
                 signupSession.getProviderUserId()
         ).isPresent()) {
-            throw new IllegalStateException("이미 연결된 소셜 계정입니다.");
+            throw new DuplicatedResourceException("이미 연결된 소셜 계정입니다.");
         }
         
         // 기존 사용자가 같은 Provider의 소셜 계정을 이미 가지고 있는지 확인
@@ -136,7 +141,7 @@ public class SignupService {
                 user,
                 signupSession.getProvider()
         )) {
-            throw new IllegalStateException("이미 동일한 소셜 로그인 수단이 연결되어 있습니다.");
+            throw new DuplicatedResourceException("이미 동일한 소셜 로그인 수단이 연결되어 있습니다.");
         }
         
         // 검증이 끝난 사용자에게 현재 가입 세션의 소셜 계정을 연결
@@ -161,7 +166,9 @@ public class SignupService {
         // 가입 완료 사용자에게 최초 인증 세션과 Token 발급
         IssuedToken issuedToken = authService.issueToken(user);
 
-        // USER_REGISTERED Event는 Kafka 연동 단계에서 신규 사용자일 때만 트랜잭션 성공 후 발행한다.
+        if (isNewUser) {
+            authEventProducer.publishUserRegisteredAfterCommit(user.getId(), user.getRole());
+        }
         return issuedToken;
     }
 
@@ -222,7 +229,7 @@ public class SignupService {
                 if (consent.getConsentStatus()
                         != ConsentStatusPolicy.AGREED) {
 
-                    throw new IllegalStateException(
+                    throw new InvalidStateException(
                             "필수 정책 동의 상태가 올바르지 않습니다."
                     );
                 }

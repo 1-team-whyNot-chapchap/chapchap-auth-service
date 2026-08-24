@@ -77,16 +77,16 @@ public class UserPolicyConsent {
     
     // 이메일 마케팅 동의 또는 철회 상태 변경
     public void changeMarketingConsent(boolean agreed) {
-        // 삼항연산자를 안쓰는 이유는 DECLINED -> 철회 요청 -> WITHDRAWN이 될수도 있기때문에 내가 설계한 흐름에 맞지않아 if로 분개한다.
-        if (agreed) {
-            this.consentStatus = ConsentStatusPolicy.AGREED;
-        } else {
-            // 실제 동의한 상태에서만 철회할 수 있다.
-            if (this.consentStatus != ConsentStatusPolicy.AGREED) {
-                throw new IllegalStateException("동의된 마케팅 정책만 철회할 수 있습니다.");
-            }
-            this.consentStatus =ConsentStatusPolicy.WITHDRAWN;
-        }
+        this.consentStatus = agreed
+                ? ConsentStatusPolicy.AGREED
+                : ConsentStatusPolicy.WITHDRAWN;
         this.decidedAt = LocalDateTime.now();
+    }
+
+    public void withdrawMarketingConsentIfAgreed() {
+        if (policy.getPolicyType() == com.chapchap.auth.global.security.constant.PolicyTypePolicy.MARKETING_EMAIL
+                && consentStatus == ConsentStatusPolicy.AGREED) {
+            changeMarketingConsent(false);
+        }
     }
 }
