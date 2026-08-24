@@ -3,6 +3,8 @@ package com.chapchap.auth.domain.user.entity;
 import com.chapchap.auth.global.security.constant.RolePolicy;
 import com.chapchap.auth.global.security.constant.SubscriptionStatusPolicy;
 import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
+import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -113,5 +115,81 @@ public class User {
         user.withdrawnAt = null;
 
         return user;
+    }
+
+    public static User createAdministrator(String name, RolePolicy role) {
+        if (role != RolePolicy.ADMIN && role != RolePolicy.SUPER_ADMIN) {
+            throw new InvalidParameterException("관리자 계정은 ADMIN 또는 SUPER_ADMIN 역할이어야 합니다.");
+        }
+        User user = new User();
+        user.defaultAddressVersion = 0L;
+        user.subscriptionStatus = SubscriptionStatusPolicy.INACTIVE;
+        user.subscriptionVersion = 0L;
+        user.name = name;
+        user.profileImageKey = null;
+        user.role = role;
+        user.status = UserStatusPolicy.ACTIVE;
+        return user;
+    }
+
+    public void changeProfileImageKey(String profileImageKey) {
+        this.profileImageKey = profileImageKey;
+    }
+
+    public void withdraw() {
+        this.identityKey = null;
+        this.defaultAddressId = null;
+        this.defaultAddressVersion = 0L;
+        this.subscriptionStatus = SubscriptionStatusPolicy.UNKNOWN;
+        this.subscriptionVersion = 0L;
+        this.name = "탈퇴회원";
+        this.phone = null;
+        this.email = null;
+        this.profileImageKey = null;
+        this.role = RolePolicy.CUSTOMER;
+        this.status = UserStatusPolicy.WITHDRAWN;
+        this.identityVerifiedAt = null;
+        this.withdrawnAt = LocalDateTime.now();
+    }
+
+    public void suspendAdministrator() {
+        if (role != RolePolicy.ADMIN) {
+            throw new InvalidStateException("ADMIN 계정만 비활성화할 수 있습니다.");
+        }
+        this.status = UserStatusPolicy.SUSPENDED;
+    }
+
+    public void changeGeneralRole(RolePolicy targetRole) {
+        if ((role != RolePolicy.CUSTOMER && role != RolePolicy.RIDER)
+                || (targetRole != RolePolicy.CUSTOMER && targetRole != RolePolicy.RIDER)
+                || status != UserStatusPolicy.ACTIVE) {
+            throw new InvalidStateException("활성 일반 사용자 역할만 변경할 수 있습니다.");
+        }
+        this.role = targetRole;
+    }
+
+    /**
+     * Subscription-Service가 소유한 대표 주소의 최소 Projection만 갱신한다.
+     * 같은 사용자에 대한 중복/역순 Kafka 전달은 업무 버전으로 무시한다.
+     */
+    public boolean updateDefaultAddressProjection(Long addressId, long addressVersion) {
+        if (addressVersion <= defaultAddressVersion) {
+            return false;
+        }
+        this.defaultAddressId = addressId;
+        this.defaultAddressVersion = addressVersion;
+        return true;
+    }
+
+    /**
+     * Subscription-Service가 확정한 구독 상태의 최소 Projection만 갱신한다.
+     */
+    public boolean updateSubscriptionProjection(SubscriptionStatusPolicy subscriptionStatus, long subscriptionVersion) {
+        if (subscriptionVersion <= this.subscriptionVersion) {
+            return false;
+        }
+        this.subscriptionStatus = subscriptionStatus;
+        this.subscriptionVersion = subscriptionVersion;
+        return true;
     }
 }
