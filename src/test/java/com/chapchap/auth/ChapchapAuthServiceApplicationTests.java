@@ -1,13 +1,21 @@
 package com.chapchap.auth;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class ChapchapAuthServiceApplicationTests {
 
     @Test
-    void contextLoads() {
+    void applicationDeclaresBootstrapAnnotations() {
+        assertTrue(
+            ChapchapAuthServiceApplication.class.isAnnotationPresent(SpringBootApplication.class)
+        );
+        assertTrue(
+            ChapchapAuthServiceApplication.class.isAnnotationPresent(ConfigurationPropertiesScan.class)
+        );
     }
 
 }

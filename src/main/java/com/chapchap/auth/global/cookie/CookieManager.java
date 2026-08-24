@@ -77,6 +77,7 @@ public class CookieManager {
         cookie.setMaxAge(maxAge); // 쿠키 유효 시간 설정
         cookie.setHttpOnly(true); // HTTPOnly 설정 (XSS 공격 방지)
         cookie.setSecure(jwtConfig.secure()); // 시큐어설정 (MITM 공격 방지)
+        cookie.setAttribute("SameSite", jwtConfig.refreshTokenCookieSameSite());
 
         response.addCookie(cookie);
     }

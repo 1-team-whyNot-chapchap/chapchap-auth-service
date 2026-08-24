@@ -12,8 +12,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: 5MB
+      max-request-size: 5MB
 
   # DB
   datasource:
@@ -62,6 +62,15 @@ spring:
               - profile_nickname
               - profile_image
               - account_email
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "${GATEWAY_URI}/api/auth/oauth2/callback/{registrationId}"
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+              - profile
+              - email
         provider:
           kakao:
             # 사용자에게 카카오 로그인 창을 띄워주는 인증 요청 URL
@@ -72,6 +81,17 @@ spring:
             user-info-uri: "https://kapi.kakao.com/v2/user/me"
             # 카카오 응답에서 사용자 식별을 위한 필드명
             user-name-attribute: id
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
 
 
 # Springdoc Openapi
@@ -116,6 +136,7 @@ jwt:
   header-key: Authorization
   scheme: Bearer
   refresh-token-cookie-path: /api/auth
+  refresh-token-cookie-same-site: Lax
 
 # minio
 minio:
@@ -128,10 +149,28 @@ minio:
     "image/jpg",
     "image/jpeg",
     "image/png",
-    "image/gif",
     "image/webp"
   ]
 
 # Sub Service
 sub-service:
   frontend-callback-uri: ${FRONTEND_CALLBACK_URI}
+
+app:
+  security:
+    allowed-origins:
+      - ${GATEWAY_URI}
+  kafka:
+    topics:
+      auth-user-events: auth.user-events.v1
+      auth-user-events-dlt: auth.user-events.v1.DLT
+      subscription-address-events: subscription.address-events.v1
+      subscription-address-events-dlt: subscription.address-events.v1.DLT
+      subscription-status-events: subscription.subscription-events.v1
+      subscription-status-events-dlt: subscription.subscription-events.v1.DLT
+    consumer-groups:
+      address: auth-service-address-group
+      subscription: auth-service-subscription-group
+    retry:
+      interval-ms: 1000
+      max-attempts: 3

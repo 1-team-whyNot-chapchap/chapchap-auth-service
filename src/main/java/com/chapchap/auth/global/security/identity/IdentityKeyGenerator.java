@@ -39,7 +39,7 @@ public class IdentityKeyGenerator {
 
         // 잘못된 DI가 암호화 로직까지 들어오는 것을 차단한다.
         if (di == null || di.isBlank()) {
-            throw new IllegalArgumentException("DI 값은 비어 있을 수 없습니다.");
+            throw new IllegalStateException("DI 값은 비어 있을 수 없습니다.");
         }
         try {
             // HmacSHA256 연산 객체 생성
