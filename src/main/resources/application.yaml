@@ -83,11 +83,16 @@ spring:
             user-name-attribute: id
 
   kafka:
+    # Spring Kafka 접속·직렬화 설정은 반드시 spring.kafka 아래에 둔다.
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # 서비스 간 계약은 JSON Envelope만 사용하고 Java 패키지 type header는 전송하지 않는다.
+        spring.json.add.type.headers: false
     consumer:
+      # Consumer는 Java 객체를 신뢰 역직렬화하지 않고 JSON 문자열을 직접 검증한다.
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
@@ -160,6 +165,8 @@ app:
   security:
     allowed-origins:
       - ${GATEWAY_URI}
+
+  # Kafka
   kafka:
     topics:
       auth-user-events: auth.user-events.v1

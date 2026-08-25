@@ -33,7 +33,7 @@ public class PortOneIdentityVerificationClient implements IdentityVerificationCl
                 .baseUrl(PORTONE_BASE_URL)
                 .defaultHeader(
                         HttpHeaders.AUTHORIZATION,
-                        "PortOne" + apiSecret
+                        "PortOne " + apiSecret
                 )
                 .build();
     }
