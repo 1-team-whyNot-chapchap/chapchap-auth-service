@@ -12,8 +12,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: 5MB
+      max-request-size: 5MB
 
   # DB
   datasource:
@@ -62,6 +62,15 @@ spring:
               - profile_nickname
               - profile_image
               - account_email
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "${GATEWAY_URI}/api/auth/oauth2/callback/{registrationId}"
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+              - profile
+              - email
         provider:
           kakao:
             # 사용자에게 카카오 로그인 창을 띄워주는 인증 요청 URL
@@ -72,6 +81,22 @@ spring:
             user-info-uri: "https://kapi.kakao.com/v2/user/me"
             # 카카오 응답에서 사용자 식별을 위한 필드명
             user-name-attribute: id
+
+  kafka:
+    # Spring Kafka 접속·직렬화 설정은 반드시 spring.kafka 아래에 둔다.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # 서비스 간 계약은 JSON Envelope만 사용하고 Java 패키지 type header는 전송하지 않는다.
+        spring.json.add.type.headers: false
+    consumer:
+      # Consumer는 Java 객체를 신뢰 역직렬화하지 않고 JSON 문자열을 직접 검증한다.
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
 
 
 # Springdoc Openapi
@@ -93,7 +118,7 @@ logging:
     name: logs/error.log
   level:
     root: info
-    com.meerkatgramv2auth: debug
+    com.chapchapauthservice: debug
 
 
 # Security & JWT
@@ -101,14 +126,22 @@ jwt:
   secure: false
   issuer: chapchap@chapchap.kr
   type: JWT
-  access-token-expiry: 100000000
-  refresh-token-expiry: 1296000000
+
+  # Access Token 만료 시간(밀리초)
+  user-access-token-expiry: 1800000
+  admin-access-token-expiry: 900000
+
   refresh-token-cookie-name: refresh-token
-  refresh-token-cookie-expiry: 1296000
+
+  # Refresh Token 쿠키 유지 시간(초)
+  user-refresh-token-cookie-expiry: 1209600
+  admin-refresh-token-cookie-expiry: 1800
+
   secret: ${JWT_SECRET}
   header-key: Authorization
   scheme: Bearer
-  reissue-uri: /api/auth/reissue-token
+  refresh-token-cookie-path: /api/auth
+  refresh-token-cookie-same-site: Lax
 
 # minio
 minio:
@@ -121,10 +154,30 @@ minio:
     "image/jpg",
     "image/jpeg",
     "image/png",
-    "image/gif",
     "image/webp"
   ]
 
 # Sub Service
 sub-service:
   frontend-callback-uri: ${FRONTEND_CALLBACK_URI}
+
+app:
+  security:
+    allowed-origins:
+      - ${GATEWAY_URI}
+
+  # Kafka
+  kafka:
+    topics:
+      auth-user-events: auth.user-events.v1
+      auth-user-events-dlt: auth.user-events.v1.DLT
+      subscription-address-events: subscription.address-events.v1
+      subscription-address-events-dlt: subscription.address-events.v1.DLT
+      subscription-status-events: subscription.subscription-events.v1
+      subscription-status-events-dlt: subscription.subscription-events.v1.DLT
+    consumer-groups:
+      address: auth-service-address-group
+      subscription: auth-service-subscription-group
+    retry:
+      interval-ms: 1000
+      max-attempts: 3

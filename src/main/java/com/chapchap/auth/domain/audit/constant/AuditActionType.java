@@ -1,0 +1,16 @@
+package com.chapchap.auth.domain.audit.constant;
+
+public enum AuditActionType {
+    ADMIN_CREATED,
+    ADMIN_DISABLED,
+    ADMIN_PASSWORD_CHANGED,
+    ADMIN_PASSWORD_RESET,
+    ADMIN_LOGIN_SUCCEEDED,
+    ADMIN_LOGIN_FAILED,
+    ADMIN_LOCKED,
+    ADMIN_UNLOCKED,
+    RIDER_ROLE_GRANTED,
+    RIDER_ROLE_REVOKED,
+    USER_WITHDRAWN,
+    TOKEN_REUSE_DETECTED
+}
