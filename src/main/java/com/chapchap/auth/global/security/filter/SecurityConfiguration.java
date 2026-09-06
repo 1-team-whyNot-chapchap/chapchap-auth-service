@@ -45,6 +45,8 @@ public class SecurityConfiguration {
                                 "/api/auth/admin/login",
                                 "/api/auth/admin/password/initial",
                                 "/api/auth/policies/current",
+                                "/internal/v1/service-tokens",
+                                "/.well-known/jwks.json",
                                 "/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated())
