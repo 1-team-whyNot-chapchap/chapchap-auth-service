@@ -181,3 +181,27 @@ app:
     retry:
       interval-ms: 1000
       max-attempts: 3
+
+# Internal service authentication is disabled until keys and allowlisted clients are injected.
+internal-service-jwt:
+  enabled: ${INTERNAL_SERVICE_JWT_ENABLED:false}
+  issuer: ${INTERNAL_SERVICE_JWT_ISSUER:chapchap-auth-service}
+  key-id: ${INTERNAL_SERVICE_JWT_KEY_ID:auth-1}
+  token-ttl-seconds: ${INTERNAL_SERVICE_JWT_TOKEN_TTL_SECONDS:300}
+  private-key-pem: ${INTERNAL_SERVICE_JWT_PRIVATE_KEY_PEM:}
+  public-key-pem: ${INTERNAL_SERVICE_JWT_PUBLIC_KEY_PEM:}
+  clients:
+    customer-service:
+      secret: ${AUTH_CUSTOMER_SERVICE_CLIENT_SECRET:}
+      subject: customer-service
+      allowed-audiences:
+        - chapchap-customer-ai
+      allowed-scopes:
+        - customer-ai.invoke
+    customer-ai:
+      secret: ${AUTH_CUSTOMER_AI_CLIENT_SECRET:}
+      subject: customer-ai
+      allowed-audiences:
+        - chapchap-customer-service
+      allowed-scopes:
+        - customer-ai.callback
