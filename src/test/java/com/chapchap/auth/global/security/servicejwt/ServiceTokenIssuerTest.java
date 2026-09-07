@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,6 +28,7 @@ class ServiceTokenIssuerTest {
         Jws<Claims> parsed = Jwts.parser()
                 .verifyWith(fixture.keys().publicKey())
                 .requireIssuer("chapchap-auth-service")
+                .clock(() -> Date.from(InternalServiceJwtTestSupport.NOW))
                 .build()
                 .parseSignedClaims(response.accessToken());
         Claims claims = parsed.getPayload();
