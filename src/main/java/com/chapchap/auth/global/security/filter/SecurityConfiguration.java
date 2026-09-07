@@ -27,15 +27,18 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, HeaderAuthenticationFilter headerAuthenticationFilter, AdminPasswordChangeRequiredFilter adminPasswordChangeRequiredFilter, RefreshCookieOriginFilter refreshCookieOriginFilter, TraceIdFilter traceIdFilter, DelegatingOAuth2UserService delegatingOAuth2UserService, OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailerHandler oAuth2FailerHandler) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, HeaderAuthenticationFilter headerAuthenticationFilter, AdminPasswordChangeRequiredFilter adminPasswordChangeRequiredFilter, RefreshCookieOriginFilter refreshCookieOriginFilter, TraceIdFilter traceIdFilter, DelegatingOAuth2UserService delegatingOAuth2UserService, OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailerHandler oAuth2FailerHandler, ApiAuthenticationEntryPoint apiAuthenticationEntryPoint) throws Exception {
         return httpSecurity
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable) // 화면 생성 비활성화
                 .formLogin(AbstractHttpConfigurer::disable) // 폼로그인 기능 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(traceIdFilter, HeaderAuthenticationFilter.class)
-                .addFilterAfter(refreshCookieOriginFilter, TraceIdFilter.class)
+                .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
+                        apiAuthenticationEntryPoint,
+                        request -> request.getRequestURI().startsWith(request.getContextPath() + "/api/")))
                 .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)// CSRF 토큰 인증 비활성화
+                .addFilterBefore(refreshCookieOriginFilter, HeaderAuthenticationFilter.class)
+                .addFilterBefore(traceIdFilter, RefreshCookieOriginFilter.class)
                 .addFilterAfter(adminPasswordChangeRequiredFilter, HeaderAuthenticationFilter.class)
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(

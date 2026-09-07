@@ -20,6 +20,9 @@ public class SoftDeleteFilterAspect {
     @Before("within(@org.springframework.web.bind.annotation.RestController *)")
     public void endableSoftDeleteFilter() {
         // 부가기능: JPA에 softDelete filter를 허용
-        entityManager.unwrap(Session.class).enableFilter("softDelete");
+        Session session = entityManager.unwrap(Session.class);
+        if (session.getSessionFactory().getDefinedFilterNames().contains("softDelete")) {
+            session.enableFilter("softDelete");
+        }
     }
 }
