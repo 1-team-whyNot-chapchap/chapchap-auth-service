@@ -35,7 +35,7 @@ class KafkaJsonContractTest {
         StringDeserializer deserializer = new StringDeserializer();
 
         String payload = deserializer.deserialize(
-                "subscription.subscription-events.v1",
+                "msa4-team1.subscription.subscription-events.v1",
                 json.getBytes(StandardCharsets.UTF_8)
         );
 

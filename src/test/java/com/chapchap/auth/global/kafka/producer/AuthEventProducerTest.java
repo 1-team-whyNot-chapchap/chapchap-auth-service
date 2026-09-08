@@ -21,9 +21,9 @@ class AuthEventProducerTest {
     private final AuthEventProducer producer = new AuthEventProducer(
             kafkaTemplate,
             new KafkaTopicProperties(
-                    "auth.user-events.v1", "auth.user-events.v1.DLT",
-                    "subscription.address-events.v1", "subscription.address-events.v1.DLT",
-                    "subscription.subscription-events.v1", "subscription.subscription-events.v1.DLT"
+                    "msa4-team1.auth.user-events.v1", "msa4-team1.auth.user-events.v1.DLT",
+                    "msa4-team1.subscription.address-events.v1", "msa4-team1.subscription.address-events.v1.DLT",
+                    "msa4-team1.subscription.subscription-events.v1", "msa4-team1.subscription.subscription-events.v1.DLT"
             )
     );
 
@@ -45,7 +45,7 @@ class AuthEventProducerTest {
                 .forEach(TransactionSynchronization::afterCommit);
 
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(kafkaTemplate).send(eq("auth.user-events.v1"), eq("25"), eventCaptor.capture());
+        verify(kafkaTemplate).send(eq("msa4-team1.auth.user-events.v1"), eq("25"), eventCaptor.capture());
         AuthEvent<?> event = (AuthEvent<?>) eventCaptor.getValue();
         assertThat(event.eventType()).isEqualTo(AuthEventType.USER_REGISTERED);
         assertThat(event.version()).isEqualTo(1);

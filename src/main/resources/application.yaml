@@ -173,12 +173,12 @@ app:
   # Kafka
   kafka:
     topics:
-      auth-user-events: auth.user-events.v1
-      auth-user-events-dlt: auth.user-events.v1.DLT
-      subscription-address-events: subscription.address-events.v1
-      subscription-address-events-dlt: subscription.address-events.v1.DLT
-      subscription-status-events: subscription.subscription-events.v1
-      subscription-status-events-dlt: subscription.subscription-events.v1.DLT
+      auth-user-events: msa4-team1.auth.user-events.v1
+      auth-user-events-dlt: msa4-team1.auth.user-events.v1.DLT
+      subscription-address-events: msa4-team1.subscription.address-events.v1
+      subscription-address-events-dlt: msa4-team1.subscription.address-events.v1.DLT
+      subscription-status-events: msa4-team1.subscription.subscription-events.v1
+      subscription-status-events-dlt: msa4-team1.subscription.subscription-events.v1.DLT
     consumer-groups:
       address: auth-service-address-group
       subscription: auth-service-subscription-group
