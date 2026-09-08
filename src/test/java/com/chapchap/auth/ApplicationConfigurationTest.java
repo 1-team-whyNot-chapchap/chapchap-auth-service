@@ -1,6 +1,8 @@
 package com.chapchap.auth;
 
+import com.chapchap.auth.global.kafka.config.KafkaTopicProperties;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -16,6 +18,25 @@ import java.util.regex.Pattern;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ApplicationConfigurationTest {
+    @Test
+    void kafkaTopicsBindToTheSubscriptionAndDeliveryTeamContract() throws Exception {
+        StandardEnvironment environment = new StandardEnvironment();
+        environment.getPropertySources().remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
+        environment.getPropertySources().remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
+        new YamlPropertySourceLoader().load("main",
+                new FileSystemResource("src/main/resources/application.yaml"))
+                .forEach(environment.getPropertySources()::addLast);
+
+        KafkaTopicProperties topics = Binder.get(environment)
+                .bind("app.kafka.topics", KafkaTopicProperties.class).orElseThrow(IllegalStateException::new);
+
+        assertThat(topics).isEqualTo(new KafkaTopicProperties(
+                "msa4-team1.auth.user-events.v1", "msa4-team1.auth.user-events.v1.DLT",
+                "msa4-team1.subscription.address-events.v1", "msa4-team1.subscription.address-events.v1.DLT",
+                "msa4-team1.subscription.subscription-events.v1", "msa4-team1.subscription.subscription-events.v1.DLT"
+        ));
+    }
+
     @Test
     void exampleResolvesAllSettingsAndKeepsDatabaseInitializationExplicit() throws Exception {
         String yaml = Files.readString(Path.of("src/main/resources/application.yaml"));
