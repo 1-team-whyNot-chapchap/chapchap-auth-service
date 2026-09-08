@@ -4,6 +4,9 @@ jwt:
   refresh-token-cookie-same-site: Strict
 
 spring:
+  sql:
+    init:
+      mode: never
   jpa:
     hibernate:
       ddl-auto: validate

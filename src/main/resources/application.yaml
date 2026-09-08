@@ -1,14 +1,16 @@
 server:
-  port: ${APP_PORT}
+  port: ${APP_PORT:8081}
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: auth-service
     version: v1
   web:
     error:
-      include-stacktrace: always
-      include-message: always
+      include-stacktrace: never
+      include-message: never
 
   servlet:
     multipart:
@@ -28,8 +30,9 @@ spring:
   # JPA
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -37,8 +40,8 @@ spring:
     defer-datasource-initialization: true
   sql:
     init:
-      data-locations: classpath*:dummy/*.sql
-      mode: always
+      data-locations: optional:classpath*:dummy/*.sql
+      mode: ${SQL_INIT_MODE:never}
       platform: all
 
   # Security & OAuth2
@@ -96,6 +99,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
+      auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
       ack-mode: record
 
 
@@ -118,7 +122,7 @@ logging:
     name: logs/error.log
   level:
     root: info
-    com.chapchapauthservice: debug
+    com.chapchap.auth: info
 
 
 # Security & JWT
