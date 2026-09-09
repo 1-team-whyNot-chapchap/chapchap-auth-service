@@ -26,7 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserRoleController {
     private final UserRoleService userRoleService;
 
-    @Operation(summary = "일반 사용자 역할 변경", description = "CUSTOMER와 RIDER 사이에서만 변경하며 기존 세션을 폐기합니다.")
+    @Operation(summary = "고객의 라이더 승격 또는 고객 역할 복귀", description = "ADMIN 또는 SUPER_ADMIN 전용입니다. "
+            + "ACTIVE CUSTOMER를 라이더로 승격하려면 targetRole=RIDER를 전송합니다. "
+            + "RIDER를 고객으로 복귀시키려면 targetRole=CUSTOMER를 전송합니다. "
+            + "관리자 대상, 비활성 사용자, 이미 같은 역할인 요청은 거절합니다. "
+            + "성공 시 기존 로그인 세션을 폐기하고 감사 이력과 역할 변경 이벤트를 기록합니다. "
+            + "대상 사용자는 재로그인하여 변경된 역할의 토큰을 발급받아야 합니다.")
     @PatchMapping("/{userId}/role")
     public ResponseEntity<GlobalResponse<UserRoleChangeResponse>> changeRole(
             Authentication authentication,

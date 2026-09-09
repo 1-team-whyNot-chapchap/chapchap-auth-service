@@ -62,4 +62,26 @@ class AuthEventProducerTest {
 
         verifyNoInteractions(kafkaTemplate);
     }
+
+    @Test
+    void roleChangeIsPublishedOnlyAfterCommitWithRolesAndUserKey() {
+        TransactionSynchronizationManager.initSynchronization();
+        producer.publishUserRoleChangedAfterCommit(25L, RolePolicy.CUSTOMER, RolePolicy.RIDER);
+        verifyNoInteractions(kafkaTemplate);
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+        ArgumentCaptor<Object> captured = ArgumentCaptor.forClass(Object.class);
+        verify(kafkaTemplate).send(eq("msa4-team1.auth.user-events.v1"), eq("25"), captured.capture());
+        AuthEvent<?> event = (AuthEvent<?>) captured.getValue();
+        assertThat(event.eventType()).isEqualTo(AuthEventType.USER_ROLE_CHANGED);
+        assertThat(event.data()).isEqualTo(new com.chapchap.auth.global.kafka.event.UserRoleChangedEventData("CUSTOMER", "RIDER"));
+    }
+
+    @Test
+    void roleChangeIsNotPublishedOnRollback() {
+        TransactionSynchronizationManager.initSynchronization();
+        producer.publishUserRoleChangedAfterCommit(25L, RolePolicy.CUSTOMER, RolePolicy.RIDER);
+        TransactionSynchronizationManager.getSynchronizations().forEach(sync ->
+                sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
+        verifyNoInteractions(kafkaTemplate);
+    }
 }
