@@ -6,6 +6,10 @@ import com.chapchap.auth.domain.user.service.AdminUserQueryService;
 import com.chapchap.auth.global.error.GlobalExceptionHandler;
 import com.chapchap.auth.global.security.constant.RolePolicy;
 import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.user.service.ActiveAdministratorAccess;
+import com.chapchap.auth.domain.user.repository.UserRepository;
+import com.chapchap.auth.domain.user.entity.User;
+import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -27,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AdminUserQueryControllerTest {
     private AnnotationConfigApplicationContext context;
+    private UserRepository users;
     private AdminUserQueryService service;
     private MockMvc mvc;
 
@@ -35,6 +40,9 @@ class AdminUserQueryControllerTest {
         service = mock(AdminUserQueryService.class);
         context = new AnnotationConfigApplicationContext();
         context.register(MethodSecurity.class);
+        users = mock(UserRepository.class);
+        context.registerBean(UserRepository.class, () -> users);
+        context.registerBean("activeAdministratorAccess", ActiveAdministratorAccess.class);
         context.registerBean(AdminUserQueryService.class, () -> service);
         context.registerBean(AdminUserQueryController.class);
         context.refresh();
@@ -93,6 +101,8 @@ class AdminUserQueryControllerTest {
     }
 
     private void authenticate(String role) {
+        if (role.equals("ADMIN") || role.equals("SUPER_ADMIN"))
+            when(users.findById(1L)).thenReturn(Optional.of(User.createAdministrator("관리자", RolePolicy.valueOf(role))));
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("1", null,
                 AuthorityUtils.createAuthorityList("ROLE_" + role)));
     }
