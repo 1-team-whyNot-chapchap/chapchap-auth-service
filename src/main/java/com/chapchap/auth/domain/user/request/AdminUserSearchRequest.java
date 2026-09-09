@@ -12,6 +12,9 @@ public record AdminUserSearchRequest(
         String phone,
         @Min(0) @Max(1000000)
         @Schema(description = "0부터 시작하는 페이지. 페이지당 20명", defaultValue = "0")
-        int page
+        Integer page
 ) {
+    public AdminUserSearchRequest {
+        page = page == null ? 0 : page;
+    }
 }

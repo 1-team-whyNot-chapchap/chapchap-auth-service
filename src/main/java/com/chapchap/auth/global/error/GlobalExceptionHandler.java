@@ -25,6 +25,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<GlobalResponse<Void>> handleUnreadableBody(
+            org.springframework.http.converter.HttpMessageNotReadableException exception) {
+        // 파싱 예외에는 요청의 개인정보가 포함될 수 있으므로 원문을 로그에 남기지 않는다.
+        return this.generateErrorResponse(CustomResponseCode.INVALID_PARAMETER_ERROR);
+    }
+
     private ResponseEntity<GlobalResponse<Void>> generateErrorResponse(CustomResponseCode customResponseCode) {
         return ResponseEntity.status(customResponseCode.getHttpStatus())
                    .body(GlobalResponse.<Void>from(customResponseCode));
