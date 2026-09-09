@@ -9,6 +9,8 @@ import com.chapchap.auth.domain.token.repository.AuthSessionRepository;
 import com.chapchap.auth.domain.token.repository.RefreshTokenRepository;
 import com.chapchap.auth.domain.token.service.AuthSessionService;
 import com.chapchap.auth.domain.user.entity.User;
+import com.chapchap.auth.domain.user.repository.UserRepository;
+import com.chapchap.auth.global.security.constant.UserStatusPolicy;
 import com.chapchap.auth.domain.audit.service.AuditLogService;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
 import com.chapchap.auth.global.jwt.JwtProvider;
@@ -31,6 +33,7 @@ public class AuthService {
     private final AuthSessionService authSessionService;
     private final RefreshTokenGenerator refreshTokenGenerator;
     private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
 
     // 쿠키로 전달받은 리프레시 토큰으로 새 토큰을 발급한다.
     // 이미 사용된 토큰이 다시 들어오면 해당 로그인 세션 전체를 폐기한다.
@@ -38,6 +41,16 @@ public class AuthService {
     public ReissuedToken reissueRefreshToken(String refreshToken) {
         // 쿠키의 토큰 원문을 DB 조회용 해시값으로 변환
         String tokenHash = refreshTokenHasher.hash(refreshToken);
+
+        // 승격과 동일한 사용자 행을 먼저 잠근다. 세션을 먼저 읽으면 동시 갱신이
+        // 이미 폐기된 세션의 revokedAt을 이전 값으로 덮어쓸 수 있다.
+        Long ownerId = refreshTokenRepository.findOwnerIdByTokenHash(tokenHash)
+                .orElseThrow(() -> new InvalidTokenException("존재하지 않는 리프레시 토큰입니다."));
+        User owner = userRepository.findByIdForUpdate(ownerId)
+                .orElseThrow(() -> new InvalidTokenException("사용할 수 없는 계정입니다."));
+        if (owner.getStatus() != UserStatusPolicy.ACTIVE) {
+            throw new InvalidTokenException("사용할 수 없는 계정입니다.");
+        }
         
         // 잠금 조회로 동시에 들어온 재발급 요청을 순서대로 처리
         RefreshToken savedRefreshToken = refreshTokenRepository
