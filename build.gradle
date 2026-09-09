@@ -65,8 +65,12 @@ dependencies {
 
     // junit
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    if (project.hasProperty('riderClientPath')) {
+        systemProperty 'rider.client.path', file(project.property('riderClientPath')).absolutePath
+    }
 }

@@ -54,6 +54,9 @@ class AuthServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private com.chapchap.auth.domain.user.repository.UserRepository userRepository;
+
     private AuthService authService;
 
     @BeforeEach
@@ -65,7 +68,8 @@ class AuthServiceTest {
             refreshTokenHasher,
             authSessionService,
             refreshTokenGenerator,
-            auditLogService
+            auditLogService,
+            userRepository
         );
     }
 
@@ -119,6 +123,9 @@ class AuthServiceTest {
         AuthSession session = mock(AuthSession.class);
         User user = mock(User.class);
         when(refreshTokenHasher.hash("reused-token")).thenReturn("hash");
+        when(refreshTokenRepository.findOwnerIdByTokenHash("hash")).thenReturn(Optional.of(25L));
+        when(userRepository.findByIdForUpdate(25L)).thenReturn(Optional.of(user));
+        when(user.getStatus()).thenReturn(com.chapchap.auth.global.security.constant.UserStatusPolicy.ACTIVE);
         when(refreshTokenRepository.findByTokenHashForUpdate("hash")).thenReturn(Optional.of(refreshToken));
         when(refreshToken.getAuthSession()).thenReturn(session);
         when(refreshToken.getConsumedAt()).thenReturn(LocalDateTime.now());
