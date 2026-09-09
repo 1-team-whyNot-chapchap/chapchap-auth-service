@@ -4,6 +4,10 @@ import com.chapchap.auth.domain.user.request.UserRoleChangeRequest;
 import com.chapchap.auth.domain.user.response.UserRoleChangeResponse;
 import com.chapchap.auth.domain.user.service.UserRoleService;
 import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.service.ActiveAdministratorAccess;
+import com.chapchap.auth.domain.user.repository.UserRepository;
+import com.chapchap.auth.domain.user.entity.User;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +29,7 @@ import static org.mockito.Mockito.*;
 
 class UserRoleAuthorizationTest {
     private AnnotationConfigApplicationContext context;
+    private UserRepository users;
     private UserRoleService service;
     private UserRoleController controller;
 
@@ -33,6 +38,9 @@ class UserRoleAuthorizationTest {
         service = mock(UserRoleService.class);
         context = new AnnotationConfigApplicationContext();
         context.register(MethodSecurity.class);
+        users = mock(UserRepository.class);
+        context.registerBean(UserRepository.class, () -> users);
+        context.registerBean("activeAdministratorAccess", ActiveAdministratorAccess.class);
         context.registerBean(UserRoleService.class, () -> service);
         context.registerBean(UserRoleController.class);
         context.refresh();
@@ -72,6 +80,8 @@ class UserRoleAuthorizationTest {
     }
 
     private Authentication authenticated(String role) {
+        if (role.equals("ADMIN") || role.equals("SUPER_ADMIN"))
+            when(users.findById(1L)).thenReturn(Optional.of(User.createAdministrator("관리자", RolePolicy.valueOf(role))));
         Authentication actor = new UsernamePasswordAuthenticationToken("1", null,
                 AuthorityUtils.createAuthorityList("ROLE_" + role));
         SecurityContextHolder.getContext().setAuthentication(actor);

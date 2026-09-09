@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN') and @activeAdministratorAccess.isAllowed(authentication)")
 public class AdminUserQueryController implements AdminUserQueryApi {
     private final AdminUserQueryService adminUserQueryService;
 

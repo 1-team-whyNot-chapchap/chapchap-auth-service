@@ -63,6 +63,7 @@ class RiderPromotionIntegrationTest {
     @Autowired AuthService auth;
     @Autowired UserRoleService roles;
     @Autowired JwtProvider jwt;
+    @Autowired JwtConfig jwtConfig;
     @Autowired KafkaTemplate<String, Object> kafka;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired AdminUserQueryController queryController;
@@ -89,6 +90,26 @@ class RiderPromotionIntegrationTest {
 
     @AfterEach
     void clear() { SecurityContextHolder.clearContext(); }
+
+    @Test
+    void suspendedAdministratorCannotSearchReadOrPromoteWithExistingAuthority() throws Exception {
+        auth.issueInitialRefreshToken(customer);
+        administrator.suspendAdministrator();
+        users.save(administrator);
+        mvc.perform(post("/api/auth/admin/users/search").contentType("application/json")
+                        .content("{\"phone\":\"01012345678\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/auth/admin/users/{id}", customer.getId()))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch("/api/auth/admin/users/{id}/role", customer.getId())
+                        .principal(SecurityContextHolder.getContext().getAuthentication())
+                        .contentType("application/json").content("{\"targetRole\":\"RIDER\"}"))
+                .andExpect(status().isForbidden());
+        assertThat(users.findById(customer.getId()).orElseThrow().getRole()).isEqualTo(RolePolicy.CUSTOMER);
+        assertThat(sessions.findAll()).hasSize(1).allMatch(session -> session.isUsable());
+        assertThat(audit.count()).isZero();
+        verifyNoInteractions(kafka);
+    }
 
     @Test
     void searchPromoteRevokeAndLoginWithNewRole() throws Exception {
@@ -251,6 +272,8 @@ class RiderPromotionIntegrationTest {
                 byte[] body = response.getContentAsByteArray();
                 exchange.sendResponseHeaders(response.getStatus(), body.length);
                 exchange.getResponseBody().write(body);
+            } catch (com.chapchap.auth.global.error.custom.business.InvalidTokenException expired) {
+                exchange.sendResponseHeaders(401, -1);
             } catch (Exception failure) {
                 exchange.sendResponseHeaders(500, -1);
             } finally {
@@ -266,6 +289,11 @@ class RiderPromotionIntegrationTest {
             process.environment().put("RIDER_AUTH_TEST_URL", "http://127.0.0.1:" + server.getAddress().getPort());
             process.environment().put("RIDER_TEST_ADMIN_COOKIE", "refreshToken=" + adminLogin.refreshToken());
             process.environment().put("RIDER_TEST_CUSTOMER_ID", customer.getId().toString());
+            String expiredAccess = io.jsonwebtoken.Jwts.builder().subject(customer.getId().toString())
+                    .claim("role", "RIDER").expiration(new Date(0))
+                    .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+                            io.jsonwebtoken.io.Decoders.BASE64.decode(jwtConfig.secret()))).compact();
+            process.environment().put("RIDER_TEST_EXPIRED_ACCESS_TOKEN", expiredAccess);
             var running = process.start();
             try {
                 assertThat(running.waitFor(30, TimeUnit.SECONDS)).isTrue();
@@ -278,7 +306,9 @@ class RiderPromotionIntegrationTest {
             executor.close();
         }
         assertThat(users.findById(customer.getId()).orElseThrow().getRole()).isEqualTo(RolePolicy.RIDER);
-        assertThat(audit.count()).isEqualTo(1);
+        assertThat(audit.findAll()).extracting(entry -> entry.getActionType().name())
+                .containsExactlyInAnyOrder("RIDER_ROLE_GRANTED", "TOKEN_REUSE_DETECTED");
+        assertThat(sessions.findAllByUser(customer)).allMatch(session -> !session.isUsable());
         verify(kafka, times(1)).send(anyString(), anyString(), any());
     }
 
@@ -287,7 +317,7 @@ class RiderPromotionIntegrationTest {
     @EnableMethodSecurity(proxyTargetClass = true)
     @EnableJpaRepositories(basePackages = {"com.chapchap.auth.domain.user.repository", "com.chapchap.auth.domain.token.repository", "com.chapchap.auth.domain.audit.repository"})
     @Import({AdminUserQueryController.class, UserRoleController.class, CurrentUserController.class, AuthController.class,
-            AdminUserQueryService.class, CurrentUserService.class, UserRoleService.class, AuthService.class,
+            ActiveAdministratorAccess.class, AdminUserQueryService.class, CurrentUserService.class, UserRoleService.class, AuthService.class,
             AuthSessionService.class, AuthSessionPolicy.class, AuditLogService.class, RefreshTokenGenerator.class,
             RefreshTokenHasher.class, JwtProvider.class, CookieManager.class, AuthEventProducer.class})
     static class Config {
