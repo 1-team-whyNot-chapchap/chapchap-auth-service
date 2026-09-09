@@ -38,6 +38,8 @@ public class AdminAuthenticationController {
                     loginResult.issuedToken().refreshToken(),
                     loginResult.issuedToken().sessionType()
             );
+        } else {
+            cookieManager.removeRefreshTokenToCookie(response);
         }
         return GlobalResponse.success(loginResult.response());
     }
