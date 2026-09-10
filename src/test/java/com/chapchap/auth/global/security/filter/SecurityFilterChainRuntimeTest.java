@@ -3,6 +3,7 @@ package com.chapchap.auth.global.security.filter;
 import com.chapchap.auth.global.config.security.SecurityConfiguration;
 
 import com.chapchap.auth.domain.auth.service.oauth2.DelegatingOAuth2UserService;
+import com.chapchap.auth.domain.auth.service.GoogleOidcService;
 import com.chapchap.auth.domain.auth.service.oauth2.OAuth2FailerHandler;
 import com.chapchap.auth.domain.auth.service.oauth2.OAuth2SuccessHandler;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ class SecurityFilterChainRuntimeTest {
                 .withBean(RefreshCookieOriginFilter.class, () -> mock(RefreshCookieOriginFilter.class))
                 .withBean(TraceIdFilter.class, () -> mock(TraceIdFilter.class))
                 .withBean(DelegatingOAuth2UserService.class, () -> mock(DelegatingOAuth2UserService.class))
+                .withBean(GoogleOidcService.class, () -> mock(GoogleOidcService.class))
                 .withBean(OAuth2SuccessHandler.class, () -> mock(OAuth2SuccessHandler.class))
                 .withBean(OAuth2FailerHandler.class, () -> mock(OAuth2FailerHandler.class))
                 .withBean(ClientRegistrationRepository.class, () -> new InMemoryClientRegistrationRepository(
