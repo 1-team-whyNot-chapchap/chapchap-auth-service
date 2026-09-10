@@ -1,6 +1,6 @@
 package com.chapchap.auth.domain.auth.dto;
 
-import com.chapchap.auth.global.security.constant.SessionTypePolicy;
+import com.chapchap.auth.domain.token.constant.SessionTypePolicy;
 
 public record IssuedToken(
     String accessToken,

@@ -1,6 +1,6 @@
 package com.chapchap.auth.global.kafka;
 
-import com.chapchap.auth.global.kafka.consumer.SubscriptionEventParser;
+import com.chapchap.auth.global.messaging.kafka.consumer.SubscriptionEventParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;

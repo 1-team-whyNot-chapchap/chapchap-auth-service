@@ -1,8 +1,8 @@
 package com.chapchap.auth.domain.user.response;
 
-import com.chapchap.auth.global.security.constant.ProviderPolicy;
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.auth.constant.ProviderPolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 
 import java.util.List;
 

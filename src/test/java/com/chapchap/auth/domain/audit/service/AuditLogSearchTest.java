@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.audit.service;
 
 import com.chapchap.auth.domain.audit.repository.AuditLogRepository;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

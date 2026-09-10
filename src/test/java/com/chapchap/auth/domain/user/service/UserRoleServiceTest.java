@@ -4,8 +4,8 @@ import com.chapchap.auth.domain.audit.service.AuditLogService;
 import com.chapchap.auth.domain.token.service.AuthSessionService;
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.UserRepository;
-import com.chapchap.auth.global.kafka.producer.AuthEventProducer;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.global.messaging.kafka.producer.AuthEventProducer;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import com.chapchap.auth.global.error.custom.business.NotFoundResourceException;
@@ -88,7 +88,7 @@ class UserRoleServiceTest {
     void suspendedCustomerIsRejectedWithoutSideEffects() {
         User user = customer();
         org.springframework.test.util.ReflectionTestUtils.setField(user, "status",
-                com.chapchap.auth.global.security.constant.UserStatusPolicy.SUSPENDED);
+                com.chapchap.auth.domain.user.constant.UserStatusPolicy.SUSPENDED);
         when(users.findByIdForUpdate(25L)).thenReturn(Optional.of(user));
         assertThatThrownBy(() -> service.changeGeneralUserRole(1L, 25L, RolePolicy.RIDER))
                 .isInstanceOf(InvalidStateException.class);

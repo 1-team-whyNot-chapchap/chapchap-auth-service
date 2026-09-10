@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.policy.entity;
 
 import com.chapchap.auth.domain.user.entity.User;
-import com.chapchap.auth.global.security.constant.ConsentStatusPolicy;
+import com.chapchap.auth.domain.policy.constant.ConsentStatusPolicy;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -84,7 +84,7 @@ public class UserPolicyConsent {
     }
 
     public void withdrawMarketingConsentIfAgreed() {
-        if (policy.getPolicyType() == com.chapchap.auth.global.security.constant.PolicyTypePolicy.MARKETING_EMAIL
+        if (policy.getPolicyType() == com.chapchap.auth.domain.policy.constant.PolicyTypePolicy.MARKETING_EMAIL
                 && consentStatus == ConsentStatusPolicy.AGREED) {
             changeMarketingConsent(false);
         }

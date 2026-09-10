@@ -4,7 +4,7 @@ import com.chapchap.auth.domain.audit.response.AuditLogResponse;
 import com.chapchap.auth.domain.audit.service.AuditLogService;
 import com.chapchap.auth.global.response.GlobalResponse;
 import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

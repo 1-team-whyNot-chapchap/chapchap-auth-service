@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.auth.entity;
 
-import com.chapchap.auth.global.security.constant.ProviderPolicy;
-import com.chapchap.auth.global.security.constant.SignupSessionStatusPolicy;
+import com.chapchap.auth.domain.auth.constant.ProviderPolicy;
+import com.chapchap.auth.domain.auth.constant.SignupSessionStatusPolicy;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

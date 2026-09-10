@@ -6,7 +6,7 @@ import com.chapchap.auth.domain.auth.request.SignupCompleteRequest;
 import com.chapchap.auth.domain.auth.response.AccessTokenResponse;
 import com.chapchap.auth.domain.auth.service.AuthService;
 import com.chapchap.auth.domain.auth.service.SignupService;
-import com.chapchap.auth.global.cookie.CookieManager;
+import com.chapchap.auth.global.service.cookie.CookieManager;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
 import com.chapchap.auth.global.response.GlobalResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

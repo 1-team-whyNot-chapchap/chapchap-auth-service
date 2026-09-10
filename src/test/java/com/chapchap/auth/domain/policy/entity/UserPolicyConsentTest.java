@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.policy.entity;
 
 import com.chapchap.auth.domain.user.entity.User;
-import com.chapchap.auth.global.security.constant.ConsentStatusPolicy;
+import com.chapchap.auth.domain.policy.constant.ConsentStatusPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

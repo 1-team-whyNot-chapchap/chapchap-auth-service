@@ -3,7 +3,7 @@ package com.chapchap.auth.domain.user.service;
 import com.chapchap.auth.domain.user.repository.UserRepository;
 import com.chapchap.auth.domain.user.response.AdminUserResponse;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.policy.response;
 
 import com.chapchap.auth.domain.policy.entity.Policy;
-import com.chapchap.auth.global.security.constant.PolicyTypePolicy;
+import com.chapchap.auth.domain.policy.constant.PolicyTypePolicy;
 
 public record CurrentPolicyResponse(
         Long policyId,

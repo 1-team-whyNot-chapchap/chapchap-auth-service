@@ -2,7 +2,7 @@ package com.chapchap.auth.global.security.filter;
 
 import com.chapchap.auth.global.response.GlobalResponse;
 import com.chapchap.auth.global.response.constant.CustomResponseCode;
-import com.chapchap.auth.global.security.config.AllowedOriginProperties;
+import com.chapchap.auth.global.config.security.AllowedOriginProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,6 +1,6 @@
 package com.chapchap.auth.domain.policy.entity;
 
-import com.chapchap.auth.global.security.constant.PolicyTypePolicy;
+import com.chapchap.auth.domain.policy.constant.PolicyTypePolicy;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

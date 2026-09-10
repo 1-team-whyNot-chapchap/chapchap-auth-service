@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.token.entity;
 
 import com.chapchap.auth.domain.user.entity.User;
-import com.chapchap.auth.global.security.constant.SessionTypePolicy;
+import com.chapchap.auth.domain.token.constant.SessionTypePolicy;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

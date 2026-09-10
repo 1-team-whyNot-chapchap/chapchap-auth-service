@@ -2,7 +2,7 @@ package com.chapchap.auth.domain.user.service;
 
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.UserRepository;
-import com.chapchap.auth.global.security.constant.SubscriptionStatusPolicy;
+import com.chapchap.auth.domain.user.constant.SubscriptionStatusPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

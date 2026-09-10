@@ -1,6 +1,6 @@
 package com.chapchap.auth.domain.policy.response;
 
-import com.chapchap.auth.global.security.constant.ConsentStatusPolicy;
+import com.chapchap.auth.domain.policy.constant.ConsentStatusPolicy;
 
 import java.time.LocalDateTime;
 

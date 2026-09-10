@@ -3,7 +3,7 @@ package com.chapchap.auth.domain.policy.service;
 import com.chapchap.auth.domain.policy.entity.Policy;
 import com.chapchap.auth.domain.policy.repository.PolicyRepository;
 import com.chapchap.auth.domain.policy.response.CurrentPolicyResponse;
-import com.chapchap.auth.global.security.constant.PolicyTypePolicy;
+import com.chapchap.auth.domain.policy.constant.PolicyTypePolicy;
 import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

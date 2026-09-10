@@ -1,10 +1,10 @@
 package com.chapchap.auth.domain.auth.service;
 
-import com.chapchap.auth.domain.auth.client.IdentityVerificationClient;
+import com.chapchap.auth.domain.auth.service.client.IdentityVerificationClient;
 import com.chapchap.auth.domain.auth.dto.IdentityVerification;
 import com.chapchap.auth.domain.auth.dto.VerifiedIdentity;
-import com.chapchap.auth.domain.auth.validator.SignupAgeValidator;
-import com.chapchap.auth.global.security.identity.IdentityKeyGenerator;
+import com.chapchap.auth.domain.auth.service.validator.SignupAgeValidator;
+import com.chapchap.auth.domain.auth.service.identity.IdentityKeyGenerator;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

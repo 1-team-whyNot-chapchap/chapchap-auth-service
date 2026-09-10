@@ -3,7 +3,7 @@ package com.chapchap.auth.domain.user.controller;
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.UserRepository;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;

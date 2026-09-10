@@ -4,7 +4,7 @@ import com.chapchap.auth.domain.admin.dto.AdminLoginResult;
 import com.chapchap.auth.domain.admin.request.AdminLoginRequest;
 import com.chapchap.auth.domain.admin.response.AdminLoginResponse;
 import com.chapchap.auth.domain.admin.service.AdminAuthenticationService;
-import com.chapchap.auth.global.cookie.CookieManager;
+import com.chapchap.auth.global.service.cookie.CookieManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 

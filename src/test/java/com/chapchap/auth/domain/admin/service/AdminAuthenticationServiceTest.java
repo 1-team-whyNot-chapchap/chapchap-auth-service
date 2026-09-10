@@ -8,8 +8,8 @@ import com.chapchap.auth.domain.auth.dto.IssuedToken;
 import com.chapchap.auth.domain.auth.service.AuthService;
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.global.error.custom.business.InvalidCredentialException;
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.SessionTypePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.token.constant.SessionTypePolicy;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 

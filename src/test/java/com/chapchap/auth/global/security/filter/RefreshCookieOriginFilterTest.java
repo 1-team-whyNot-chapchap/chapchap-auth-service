@@ -1,6 +1,6 @@
 package com.chapchap.auth.global.security.filter;
 
-import com.chapchap.auth.global.security.config.AllowedOriginProperties;
+import com.chapchap.auth.global.config.security.AllowedOriginProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;

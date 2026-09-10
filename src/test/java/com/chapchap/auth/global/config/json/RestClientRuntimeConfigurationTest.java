@@ -1,6 +1,6 @@
 package com.chapchap.auth.global.config.json;
 
-import com.chapchap.auth.domain.auth.client.portone.PortOneIdentityVerificationClient;
+import com.chapchap.auth.domain.auth.service.client.portone.PortOneIdentityVerificationClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration;

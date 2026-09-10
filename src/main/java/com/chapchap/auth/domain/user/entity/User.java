@@ -1,8 +1,8 @@
 package com.chapchap.auth.domain.user.entity;
 
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.SubscriptionStatusPolicy;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.SubscriptionStatusPolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import jakarta.persistence.*;

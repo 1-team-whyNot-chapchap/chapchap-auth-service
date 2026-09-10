@@ -1,7 +1,7 @@
 package com.chapchap.auth.domain.user.response;
 
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record AdminUserResponse(

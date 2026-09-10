@@ -6,7 +6,7 @@ import com.chapchap.auth.domain.admin.request.AdminPasswordResetRequest;
 import com.chapchap.auth.domain.admin.request.InitialAdminPasswordChangeRequest;
 import com.chapchap.auth.domain.admin.response.AdminAccountResponse;
 import com.chapchap.auth.domain.admin.service.AdminAccountService;
-import com.chapchap.auth.global.cookie.CookieManager;
+import com.chapchap.auth.global.service.cookie.CookieManager;
 import com.chapchap.auth.global.response.GlobalResponse;
 import com.chapchap.auth.global.error.custom.business.InvalidTokenException;
 import io.swagger.v3.oas.annotations.Operation;

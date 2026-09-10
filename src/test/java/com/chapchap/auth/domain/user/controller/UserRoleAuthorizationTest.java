@@ -3,7 +3,7 @@ package com.chapchap.auth.domain.user.controller;
 import com.chapchap.auth.domain.user.request.UserRoleChangeRequest;
 import com.chapchap.auth.domain.user.response.UserRoleChangeResponse;
 import com.chapchap.auth.domain.user.service.UserRoleService;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import com.chapchap.auth.domain.user.service.ActiveAdministratorAccess;
 import com.chapchap.auth.domain.user.repository.UserRepository;
 import com.chapchap.auth.domain.user.entity.User;

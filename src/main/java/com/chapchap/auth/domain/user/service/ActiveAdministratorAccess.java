@@ -1,8 +1,8 @@
 package com.chapchap.auth.domain.user.service;
 
 import com.chapchap.auth.domain.user.repository.UserRepository;
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.chapchap.auth;
 
-import com.chapchap.auth.global.kafka.config.KafkaTopicProperties;
+import com.chapchap.auth.global.config.kafka.KafkaTopicProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.env.YamlPropertySourceLoader;

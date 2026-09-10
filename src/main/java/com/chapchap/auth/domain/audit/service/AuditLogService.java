@@ -6,7 +6,7 @@ import com.chapchap.auth.domain.audit.constant.AuditTargetType;
 import com.chapchap.auth.domain.audit.entity.AuditLog;
 import com.chapchap.auth.domain.audit.repository.AuditLogRepository;
 import com.chapchap.auth.domain.audit.response.AuditLogResponse;
-import com.chapchap.auth.global.security.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.data.domain.Page;

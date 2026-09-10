@@ -2,7 +2,7 @@ package com.chapchap.auth.domain.user.repository;
 
 import com.chapchap.auth.domain.user.entity.SocialAccount;
 import com.chapchap.auth.domain.user.entity.User;
-import com.chapchap.auth.global.security.constant.ProviderPolicy;
+import com.chapchap.auth.domain.auth.constant.ProviderPolicy;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,6 +1,6 @@
 package com.chapchap.auth.global.config.json;
 
-import com.chapchap.auth.global.kafka.consumer.SubscriptionEventParser;
+import com.chapchap.auth.global.messaging.kafka.consumer.SubscriptionEventParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;

@@ -1,8 +1,10 @@
 package com.chapchap.auth.global.security.filter;
 
-import com.chapchap.auth.global.security.oauth2.DelegatingOAuth2UserService;
-import com.chapchap.auth.global.security.oauth2.OAuth2FailerHandler;
-import com.chapchap.auth.global.security.oauth2.OAuth2SuccessHandler;
+import com.chapchap.auth.global.config.security.SecurityConfiguration;
+
+import com.chapchap.auth.domain.auth.service.oauth2.DelegatingOAuth2UserService;
+import com.chapchap.auth.domain.auth.service.oauth2.OAuth2FailerHandler;
+import com.chapchap.auth.domain.auth.service.oauth2.OAuth2SuccessHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;

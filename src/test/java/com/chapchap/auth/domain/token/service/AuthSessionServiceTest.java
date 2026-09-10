@@ -3,8 +3,8 @@ package com.chapchap.auth.domain.token.service;
 import com.chapchap.auth.domain.token.entity.AuthSession;
 import com.chapchap.auth.domain.token.repository.AuthSessionRepository;
 import com.chapchap.auth.domain.user.entity.User;
-import com.chapchap.auth.global.security.constant.SessionTypePolicy;
-import com.chapchap.auth.global.security.policy.AuthSessionPolicy;
+import com.chapchap.auth.domain.token.constant.SessionTypePolicy;
+import com.chapchap.auth.domain.token.service.AuthSessionPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

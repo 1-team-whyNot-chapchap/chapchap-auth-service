@@ -15,9 +15,9 @@ import com.chapchap.auth.global.error.custom.business.InvalidCredentialException
 import com.chapchap.auth.global.error.custom.business.DuplicatedResourceException;
 import com.chapchap.auth.global.error.custom.business.NotFoundResourceException;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
-import com.chapchap.auth.global.kafka.producer.AuthEventProducer;
-import com.chapchap.auth.global.security.constant.RolePolicy;
-import com.chapchap.auth.global.security.constant.UserStatusPolicy;
+import com.chapchap.auth.global.messaging.kafka.producer.AuthEventProducer;
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

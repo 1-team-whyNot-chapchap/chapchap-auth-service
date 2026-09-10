@@ -1,9 +1,11 @@
 package com.chapchap.auth.domain.user;
 
+import com.chapchap.auth.domain.user.constant.RolePolicy;
+import com.chapchap.auth.domain.user.constant.UserStatusPolicy;
+
 import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.UserRepository;
 import com.chapchap.auth.domain.user.service.ActiveAdministratorAccess;
-import com.chapchap.auth.global.security.constant.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
