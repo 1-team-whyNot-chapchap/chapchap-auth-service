@@ -47,8 +47,9 @@ class OAuth2SuccessHandlerTest {
     @Mock
     private HttpServletResponse response;
 
-    @Test
-    void existingMemberLoginSetsOnlyRefreshCookieBeforeRedirect() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void existingMemberLoginSetsOnlyRefreshCookieBeforeRedirect(boolean oidc) throws Exception {
         OAuth2SuccessHandler handler = new OAuth2SuccessHandler(
             userRepository,
             authService,
@@ -61,8 +62,14 @@ class OAuth2SuccessHandlerTest {
             Map.of("authFlow", "LOGIN", "userId", 25L),
             "userId"
         );
+        org.springframework.security.oauth2.core.user.OAuth2User authenticatedPrincipal = principal;
+        if (oidc) {
+            var oidcPrincipal = org.mockito.Mockito.mock(org.springframework.security.oauth2.core.oidc.user.OidcUser.class);
+            when(oidcPrincipal.getAttributes()).thenReturn(principal.getAttributes());
+            authenticatedPrincipal = oidcPrincipal;
+        }
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-            principal,
+            authenticatedPrincipal,
             null,
             principal.getAuthorities()
         );

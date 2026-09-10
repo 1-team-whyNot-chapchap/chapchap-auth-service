@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -37,8 +37,8 @@ public class OAuth2SuccessHandler
         @NonNull Authentication authentication
     ) throws IOException, ServletException {
 
-        DefaultOAuth2User oAuth2User =
-            (DefaultOAuth2User) authentication.getPrincipal();
+        OAuth2User oAuth2User =
+            (OAuth2User) authentication.getPrincipal();
 
         Map<String, Object> attributes =
             oAuth2User.getAttributes();

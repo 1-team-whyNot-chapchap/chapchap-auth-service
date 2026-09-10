@@ -34,13 +34,17 @@ public class GoogleOAuth2Service implements OAuth2UserService<OAuth2UserRequest,
     @Override
     public OAuth2User loadUser(@NonNull OAuth2UserRequest request) {
         OAuth2User oAuthUser = new DefaultOAuth2UserService().loadUser(request);
+        return resolvePrincipal(oAuthUser);
+    }
+
+    // Only provider-verified identities may enter the shared account flow.
+    OAuth2User resolvePrincipal(OAuth2User oAuthUser) {
         Object providerUserIdValue = oAuthUser.getAttributes().get("sub");
 
-        if (providerUserIdValue == null) {
+        if (!(providerUserIdValue instanceof String providerUserId) || providerUserId.isBlank()) {
             throw createOAuth2Exception("Google 사용자 식별자를 가져올 수 없습니다.");
         }
 
-        String providerUserId = String.valueOf(providerUserIdValue);
         Optional<SocialAccount> existingSocialAccount = socialAccountRepository
             .findByProviderAndProviderUserId(ProviderPolicy.GOOGLE, providerUserId);
 
