@@ -38,3 +38,23 @@ out/
 
 .env
 .env.before-minimize-*
+
+# Local documentation (already tracked files are unaffected)
+*.md
+*.markdown
+*.pdf
+*.doc
+*.docx
+*.hwp
+*.hwpx
+*.ppt
+*.pptx
+/docs/
+/reports/
+/GENERAL_HARNESS/
+/PROJECT_HARNESS/
+/ai-context/
+
+# Local runtime logs
+/logs/
+*.log
