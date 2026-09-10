@@ -169,6 +169,7 @@ app:
   security:
     allowed-origins:
       - ${GATEWAY_URI}
+      - ${FRONTEND_ORIGIN:${GATEWAY_URI}}
 
   # Kafka
   kafka:
