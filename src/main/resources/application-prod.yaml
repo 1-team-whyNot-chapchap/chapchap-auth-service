@@ -1,0 +1,12 @@
+# 운영에서는 HTTPS 전용 Refresh Cookie를 강제한다.
+jwt:
+  secure: true
+  refresh-token-cookie-same-site: Strict
+
+spring:
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: validate

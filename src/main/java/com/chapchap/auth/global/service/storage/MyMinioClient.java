@@ -1,0 +1,20 @@
+package com.chapchap.auth.global.service.storage;
+
+import com.chapchap.auth.global.config.storage.MinioConfig;
+
+import io.minio.MinioClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MyMinioClient {
+
+    @Bean
+    public MinioClient minioClient(MinioConfig minioConfig) {
+        return MinioClient.builder()
+            .endpoint(minioConfig.minioEndpoint())
+            .credentials(minioConfig.minioAccessKey(), minioConfig.minioSecretKey())
+            .build();
+    }
+
+}
