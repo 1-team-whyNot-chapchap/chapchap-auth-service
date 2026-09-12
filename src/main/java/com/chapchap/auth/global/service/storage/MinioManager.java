@@ -8,6 +8,7 @@ import com.chapchap.auth.global.error.custom.business.InvalidParameterException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import io.minio.GetObjectArgs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,7 +94,7 @@ public class MinioManager {
         }
     }
 
-    private String detectProfileImageMimeType(byte[] bytes) {
+    public String detectProfileImageMimeType(byte[] bytes) {
         if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xFF
                 && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) {
             return "image/jpeg";
@@ -126,6 +127,20 @@ public class MinioManager {
                 );
         } catch (Exception e) {
             throw new FileManagedException("파일 업로드 실패: MinIo 업로드 실패, " + objectKey + "\n" + e.getMessage());
+        }
+    }
+
+    public byte[] downloadProfileImage(String objectKey) {
+        try (InputStream input = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(minioConfig.minioBucket()).object(objectKey).build())) {
+            byte[] bytes = input.readNBytes((int) MAX_PROFILE_IMAGE_SIZE + 1);
+            if (bytes.length > MAX_PROFILE_IMAGE_SIZE) {
+                throw new InvalidParameterException("프로필 이미지 크기를 확인해 주세요.");
+            }
+            detectProfileImageMimeType(bytes);
+            return bytes;
+        } catch (Exception exception) {
+            throw new FileManagedException("프로필 이미지를 불러오지 못했습니다.");
         }
     }
 
