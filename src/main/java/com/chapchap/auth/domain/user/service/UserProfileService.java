@@ -8,6 +8,7 @@ import com.chapchap.auth.domain.user.entity.User;
 import com.chapchap.auth.domain.user.repository.SocialAccountRepository;
 import com.chapchap.auth.domain.user.repository.UserRepository;
 import com.chapchap.auth.domain.user.response.UserProfileResponse;
+import com.chapchap.auth.domain.user.response.UserProfileImageResponse;
 import com.chapchap.auth.global.error.custom.business.NotFoundResourceException;
 import com.chapchap.auth.global.error.custom.business.InvalidStateException;
 import com.chapchap.auth.global.service.storage.MinioManager;
@@ -43,6 +44,16 @@ public class UserProfileService {
         User user = getEligibleUser(userId);
         List<SocialAccount> accounts = socialAccountRepository.findAllByUser(user);
         return toProfileResponse(user, accounts);
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileImageResponse getProfileImage(Long userId) {
+        User user = getEligibleUser(userId);
+        if (user.getProfileImageKey() == null) {
+            throw new NotFoundResourceException("등록된 프로필 이미지가 없습니다.");
+        }
+        byte[] content = minioManager.downloadProfileImage(user.getProfileImageKey());
+        return new UserProfileImageResponse(content, minioManager.detectProfileImageMimeType(content));
     }
 
     @Transactional

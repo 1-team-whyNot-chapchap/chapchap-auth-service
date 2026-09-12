@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +40,21 @@ public class UserProfileController {
     @GetMapping
     public ResponseEntity<GlobalResponse<UserProfileResponse>> getMyProfile(Authentication authentication) {
         return GlobalResponse.success(userProfileService.getMyProfile(currentUserId(authentication)));
+    }
+
+    @Operation(summary = "내 프로필 이미지 조회", description = "인증된 본인의 비공개 이미지만 반환합니다.")
+    @GetMapping("/profile-image")
+    public ResponseEntity<byte[]> getProfileImage(Authentication authentication) {
+        var image = userProfileService.getProfileImage(currentUserId(authentication));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .contentType(MediaType.parseMediaType(image.contentType())).body(image.content());
+    }
+
+    @Operation(summary = "현재 이메일 마케팅 동의 조회", description = "현재 정책에 대한 기록이 없으면 consentStatus와 decidedAt은 null입니다.")
+    @GetMapping("/marketing-consent")
+    public ResponseEntity<GlobalResponse<MarketingConsentResponse>> getMarketingConsent(
+            Authentication authentication, @RequestParam Long policyId) {
+        return GlobalResponse.success(marketingConsentService.getCurrent(currentUserId(authentication), policyId));
     }
 
     @Operation(summary = "프로필 이미지 등록 또는 교체", description = "JPEG, PNG, WebP만 허용하며 최대 5MB입니다.")
