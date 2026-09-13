@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface AdminCredentialRepository extends JpaRepository<AdminCredential, Long> {
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "user")
+    @Query("select c from AdminCredential c where lower(c.username) like lower(concat('%', :search, '%')) or lower(c.user.name) like lower(concat('%', :search, '%'))")
+    org.springframework.data.domain.Page<AdminCredential> searchAccounts(@Param("search") String search, org.springframework.data.domain.Pageable pageable);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select credential
