@@ -72,8 +72,15 @@ public class SignupService {
             throw new DuplicatedResourceException("이미 사용된 본인인증 정보입니다.");
         }
 
-        // PortOne 본인인증 결과를 서버에서 재조회하고 연령 검증 및 identityKey 생성을 수행
-        VerifiedIdentity verifiedIdentity = identityVerificationService.verify(request.identityVerificationId());
+        // PortOne 인증 결과를 조회한다.
+        // 테스트용 키 생성에 필요한 소셜 정보는 클라이언트가 아니라
+        // 서버가 이미 저장한 가입 세션에서 가져온다.
+        VerifiedIdentity verifiedIdentity =
+                identityVerificationService.verify(
+                        request.identityVerificationId(),
+                        signupSession.getProvider(),
+                        signupSession.getProviderUserId()
+                );
         
         // 검증이 완료된 본인정보를 가입 세션에 반영하고 PENDING -> IDENTITY_VERIFIED 상태로 변경
         signupSession.markIdentityVerified(
