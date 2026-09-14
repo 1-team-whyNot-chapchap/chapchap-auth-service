@@ -58,6 +58,8 @@ public class KakaoOAuth2Service
         String providerUserId =
             String.valueOf(providerUserIdValue);
 
+        String email = extractEmail(attributes);
+
         // 등록된 카카오 로그인 수단 조회
         Optional<SocialAccount> existingSocialAccount =
             socialAccountRepository
@@ -78,7 +80,8 @@ public class KakaoOAuth2Service
             signupSessionRepository.save(
                 SignupSession.createPending(
                     ProviderPolicy.KAKAO,
-                    providerUserId
+                    providerUserId,
+                    email
                 )
             );
 
@@ -136,6 +139,21 @@ public class KakaoOAuth2Service
             ),
             "signupSessionId"
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private String extractEmail(Map<String, Object> attributes) {
+        Object kakaoAccountValue = attributes.get("kakao_account");
+        if (!(kakaoAccountValue instanceof Map<?, ?> kakaoAccountMap)) {
+            return null;
+        }
+
+        Object emailValue = kakaoAccountMap.get("email");
+        if (!(emailValue instanceof String email) || email.isBlank()) {
+            return null;
+        }
+
+        return email;
     }
 
 
