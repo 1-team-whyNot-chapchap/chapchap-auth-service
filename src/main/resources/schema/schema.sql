@@ -83,6 +83,7 @@ create table signup_sessions (
     identity_key varchar(64),
     identity_verification_id varchar(191),
     provider_user_id varchar(191) not null,
+    email varchar(255),
     provider enum ('GOOGLE','KAKAO') not null,
     status enum ('COMPLETED','EXPIRED','FAILED','IDENTITY_VERIFIED','PENDING') not null,
     primary key (signup_session_id)

@@ -136,6 +136,10 @@ public class User {
         this.profileImageKey = profileImageKey;
     }
 
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
     public void withdraw() {
         this.identityKey = null;
         this.defaultAddressId = null;
