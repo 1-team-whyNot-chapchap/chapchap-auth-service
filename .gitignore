@@ -58,3 +58,6 @@ out/
 # Local runtime logs
 /logs/
 *.log
+
+# Local-only manual seed data (may contain credential hashes)
+/local-data/
