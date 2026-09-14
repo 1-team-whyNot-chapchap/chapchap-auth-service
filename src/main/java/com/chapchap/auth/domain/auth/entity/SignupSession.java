@@ -51,6 +51,9 @@ public class SignupSession {
     @Column(name = "identity_verification_id", length = 191)
     private String identityVerificationId;
 
+    @Column(name = "email", length = 255)
+    private String email;
+
     // DI 원문을 HMAC-SHA-256으로 변환한 임시 동일인 식별키
     // DI 원문 자체는 저장하지 않는다.
     @Column(name = "identity_key", length = 64)
@@ -85,11 +88,20 @@ public class SignupSession {
             ProviderPolicy provider,
             String providerUserId
     ) {
+        return createPending(provider, providerUserId, null);
+    }
+
+    public static SignupSession createPending(
+            ProviderPolicy provider,
+            String providerUserId,
+            String email
+    ) {
         SignupSession signupSession = new SignupSession();
 
         signupSession.id = UUID.randomUUID().toString();
         signupSession.provider = provider;
         signupSession.providerUserId = providerUserId;
+        signupSession.email = email;
         signupSession.status = SignupSessionStatusPolicy.PENDING;
         signupSession.expiresAt = LocalDateTime.now().plusMinutes(15);
 

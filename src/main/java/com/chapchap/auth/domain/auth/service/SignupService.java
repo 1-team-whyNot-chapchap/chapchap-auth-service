@@ -120,12 +120,16 @@ public class SignupService {
                     verifiedIdentity.identityKey(),
                     verifiedIdentity.name(),
                     verifiedIdentity.phone(),
-                    null, // 이메일은 소셜 Provider 정보에서 별도로 처리
+                    signupSession.getEmail(),
                     LocalDateTime.now()
             );
 
             user = userRepository.save(user);
             isNewUser = true;
+        }
+
+        if (user.getEmail() == null && signupSession.getEmail() != null) {
+            user.changeEmail(signupSession.getEmail());
         }
         
         // 해당 소셜 계정 자체가 이미 다른 가입에 사용되고 있는지 확인

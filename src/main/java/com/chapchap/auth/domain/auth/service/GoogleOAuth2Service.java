@@ -45,6 +45,11 @@ public class GoogleOAuth2Service implements OAuth2UserService<OAuth2UserRequest,
             throw createOAuth2Exception("Google 사용자 식별자를 가져올 수 없습니다.");
         }
 
+        String email = oAuthUser.getAttributes()
+            .get("email") instanceof String emailValue && !emailValue.isBlank()
+            ? emailValue
+            : null;
+
         Optional<SocialAccount> existingSocialAccount = socialAccountRepository
             .findByProviderAndProviderUserId(ProviderPolicy.GOOGLE, providerUserId);
 
@@ -53,7 +58,7 @@ public class GoogleOAuth2Service implements OAuth2UserService<OAuth2UserRequest,
         }
 
         SignupSession signupSession = signupSessionRepository.save(
-            SignupSession.createPending(ProviderPolicy.GOOGLE, providerUserId)
+            SignupSession.createPending(ProviderPolicy.GOOGLE, providerUserId, email)
         );
 
         return new DefaultOAuth2User(
